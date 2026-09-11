@@ -1,10 +1,33 @@
 import { Request, Response } from "express";
-import { PrismaClient } from "@prisma/client";
 import { PrismaClientKnownRequestError } from "@prisma/client/runtime/library";
-import { Prisma } from "@prisma/client"; // <-- ensure Prisma is imported
+import { Prisma } from "@prisma/client";
 import bcrypt from "bcryptjs";
+import prisma from "../lib/prisma";
 
-const prisma = new PrismaClient();
+// Generic table/column updaters below are admin-only, but the table and
+// column names still come straight from the request body. Restrict them to
+// exactly the combinations the admin dashboard actually sends (approve
+// player/payment/club-change, assign SLBF id, record club-change dates) so
+// this can't be used to write to arbitrary tables/columns (e.g. user.role,
+// user.password) even from an admin session.
+const UPDATABLE_FIELDS: Record<string, ReadonlySet<string>> = {
+  user: new Set(["status"]),
+  player: new Set([
+    "slbfId",
+    "openAssId",
+    "openClubId",
+    "openClubChagngeDate",
+    "closeAssId",
+    "closeClubId",
+    "closeClubChagngeDate",
+  ]),
+  payment: new Set(["status"]),
+  clubchange: new Set(["status"]),
+};
+
+function isUpdatableField(table: string, column: string): boolean {
+  return UPDATABLE_FIELDS[table]?.has(column) ?? false;
+}
 
 export const getPendingPlayers = async (
   req: Request,
@@ -99,6 +122,13 @@ export const updatetableField = async (
       return;
     }
 
+    if (!isUpdatableField(table, column)) {
+      res.status(400).json({
+        success: false,
+        message: `Updating ${table}.${column} is not allowed.`,
+      });
+      return;
+    }
 
     // Build dynamic update object
     const updateData: Record<string, any> = {};
@@ -137,6 +167,17 @@ export const updatetableFields = async (
       res.status(400).json({
         success: false,
         message: "Missing required fields: table, id, or updates object",
+      });
+      return;
+    }
+
+    const invalidColumn = Object.keys(updates).find(
+      (column) => !isUpdatableField(table, column)
+    );
+    if (invalidColumn) {
+      res.status(400).json({
+        success: false,
+        message: `Updating ${table}.${invalidColumn} is not allowed.`,
       });
       return;
     }

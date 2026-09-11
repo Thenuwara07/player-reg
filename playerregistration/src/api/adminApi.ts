@@ -403,10 +403,7 @@ export async function getAllPlayers(params?: {
   sortBy?: string;
   sortOrder?: "asc" | "desc";
 }): Promise<PlayersResponse> {
-  const token =
-    sessionStorage.getItem("authToken") ??
-    localStorage.getItem("authToken") ??
-    "";
+  const token = sessionStorage.getItem("authToken") ?? "";
 
   const sortBy = params?.sortBy ?? "firstName";
   const sortOrder =
