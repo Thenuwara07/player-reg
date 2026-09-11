@@ -1,0 +1,271 @@
+<div className="space-y-2">
+                        <Label>Close Club</Label>
+                        <Input
+                          value={
+                            currentUser?.player?.closeClub || "Not selected"
+                          }
+                          disabled
+                        />
+                        {!(
+                          incloseCooldown ||
+                          currentUser?.player?.closeClub === "pending"
+                        ) && (
+                          <Dialog
+                            // onOpenChange={(open) => {
+                            //   setOpenDialog(open);
+                            //   if (!open) {
+                            //     resetClubChangeForm();
+                            //   }
+                            // }}
+                            open={opencloseDialog}
+                            onOpenChange={setOpencloseDialog}
+                          >
+                            <DialogTrigger asChild>
+                              {!currentUser?.player?.closeClub ? (
+                                <Button
+                                  className="w-full mt-4"
+                                  variant="outline"
+                                >
+                                  Select Close Club
+                                </Button>
+                              ) : (
+                                <Button
+                                  className="w-full mt-4"
+                                  variant="outline"
+                                >
+                                  Request Close Club Change
+                                </Button>
+                              )}
+                            </DialogTrigger>
+                            <DialogContent className="max-w-2xl w-full">
+                              <DialogHeader>
+                                {!currentUser?.player?.closeClub ? (
+                                  <DialogTitle>
+                                    Select your Close Club
+                                  </DialogTitle>
+                                ) : (
+                                  <>
+                                    <DialogTitle>
+                                      Request Close Club Change
+                                    </DialogTitle>
+                                    <DialogDescription>
+                                      Submit a request to change your current
+                                      Close club
+                                    </DialogDescription>
+                                  </>
+                                )}
+                              </DialogHeader>
+                              <div className="space-y-2">
+                                <div className="space-x-6  flex  align-middle justify-between">
+                                  {currentUser?.player?.closeClub ? (
+                                    <div className="space-y-4">
+                                      <Label>Current Close Club</Label>
+                                      <SearchableFreeTextClubInput
+                                        value={clubChangeData.currentClub || ""} // display the name
+                                        onChange={(name) =>
+                                          setClubChangeData((prev) => ({
+                                            ...prev,
+                                            currentClub: name,
+                                          }))
+                                        }
+                                        onChangeDetailed={({ label, value }) =>
+                                          setClubChangeData((prev) => ({
+                                            ...prev,
+                                            currentClub: label, // name
+                                            currentClubCode: value, // code ('' if not found)
+                                          }))
+                                        }
+                                        clubs={closeclubs} // string[]
+                                        codeByName={closecodeByName} // name -> code
+                                        onOpenType={() =>
+                                          handleClubInputChange("type", "close")
+                                        }
+                                      />
+                                      {/* --- Resignation Date (new) --- */}
+                                      <div className="space-y-2">
+                                        <Label htmlFor="resignDate">
+                                          Resignation Date
+                                        </Label>
+                                        <input
+                                          id="resignDate"
+                                          type="date"
+                                          value={
+                                            clubChangeData.resignDate ?? ""
+                                          }
+                                          onChange={(e) =>
+                                            setClubChangeData((prev) => ({
+                                              ...prev,
+                                              resignDate: e.target.value,
+                                            }))
+                                          }
+                                          max={
+                                            new Date()
+                                              .toISOString()
+                                              .split("T")[0]
+                                          } // disallow future dates
+                                          className="w-full rounded-md border px-3 py-2 outline-none focus:ring-2 focus:ring-blue-500"
+                                        />
+                                        <p className="text-xs text-gray-500">
+                                          Select the date you resigned from the
+                                          current club.
+                                        </p>
+                                      </div>
+                                      <div className="space-y-4">
+                                        <Label>
+                                          Please upload your resignation letter
+                                          as an image
+                                        </Label>
+                                        <div className="items-center ">
+                                          <div className="relative">
+                                            {previews.currentletter ? (
+                                              <img
+                                                src={previews.currentletter}
+                                                alt="Profile preview"
+                                                className="w-40 h-70 rounded-lg object-cover border-2 border-gray-300 mb-10"
+                                              />
+                                            ) : (
+                                              <div className="w-40 h-[150px]  rounded-1g bg-gray-200 flex items-center justify-center mb-10">
+                                                <span className="text-gray-500">
+                                                  No image
+                                                </span>
+                                              </div>
+                                            )}
+                                          </div>
+                                          <div className="flex-1">
+                                            <input
+                                              type="file"
+                                              ref={lettercurrentFileRef}
+                                              onChange={(e) =>
+                                                handleFileChange(
+                                                  "currentletter",
+                                                  e
+                                                )
+                                              }
+                                              // onChange={(e) => setFile(e.target.files?.[0] || null)}
+                                              accept="image/*"
+                                              className="hidden"
+                                              id="currentLetterImage"
+                                            />
+                                            <Label
+                                              htmlFor="currentLetterImage"
+                                              className="cursor-pointer"
+                                            >
+                                              <Button
+                                                type="button"
+                                                variant="outline"
+                                                onClick={() =>
+                                                  lettercurrentFileRef.current?.click()
+                                                }
+                                              >
+                                                {previews.currentletter
+                                                  ? "Change Image"
+                                                  : "Upload Image"}
+                                              </Button>
+                                            </Label>
+                                            <p className="text-xs text-gray-500 mt-1">
+                                              Recommended size: 200x200 pixels,
+                                              Max 2MB
+                                            </p>
+                                          </div>
+                                        </div>
+                                      </div>
+                                    </div>
+                                  ) : (
+                                    ""
+                                  )}
+                                  <div className="space-y-4">
+                                    <div className="space-y-4">
+                                      <Label>New Close Club</Label>
+                                      <SearchableFreeTextClubInput
+                                        value={clubChangeData.newClub || ""} // keep in sync with your state
+                                        onChange={(val) =>
+                                          setClubChangeData((prev) => ({
+                                            ...prev,
+                                            newClub: val,
+                                          }))
+                                        }
+                                        onChangeDetailed={({ label, value }) =>
+                                          setClubChangeData((prev) => ({
+                                            ...prev,
+                                            newClub: label, // name
+                                            newClubCode: value, // code ('' if not found)
+                                          }))
+                                        }
+                                        clubs={closeclubs}
+                                        codeByName={closecodeByName}
+                                        onOpenType={() =>
+                                          handleClubInputChange("type", "close")
+                                        } // keeps your previous side-effect
+                                      />
+                                      <div className="space-y-4">
+                                        <Label>
+                                          Please upload your offer letter as an
+                                          image
+                                        </Label>
+                                        <div className="items-center ">
+                                          <div className="relative">
+                                            {previews.newletter ? (
+                                              <img
+                                                src={previews.newletter}
+                                                alt="Profile preview"
+                                                className="w-40 h-70 rounded-lg object-cover border-2 border-gray-300 mb-10"
+                                              />
+                                            ) : (
+                                              <div className="w-40 h-[150px]  rounded-1g bg-gray-200 flex items-center justify-center mb-10">
+                                                <span className="text-gray-500">
+                                                  No image
+                                                </span>
+                                              </div>
+                                            )}
+                                          </div>
+                                          <div className="flex-1">
+                                            <input
+                                              type="file"
+                                              ref={letternewFileRef}
+                                              onChange={(e) =>
+                                                handleFileChange("newletter", e)
+                                              }
+                                              // onChange={(e) => setFile(e.target.files?.[0] || null)}
+                                              accept="image/*"
+                                              className="hidden"
+                                              id="newLetterImage"
+                                            />
+                                            <Label
+                                              htmlFor="newLetterImage"
+                                              className="cursor-pointer"
+                                            >
+                                              <Button
+                                                type="button"
+                                                variant="outline"
+                                                onClick={() =>
+                                                  letternewFileRef.current?.click()
+                                                }
+                                              >
+                                                {previews.newletter
+                                                  ? "Change Image"
+                                                  : "Upload Image"}
+                                              </Button>
+                                            </Label>
+                                            <p className="text-xs text-gray-500 mt-1">
+                                              Recommended size: 200x200 pixels,
+                                              Max 2MB
+                                            </p>
+                                          </div>
+                                        </div>
+                                      </div>
+                                    </div>
+                                  </div>
+                                </div>
+                                <div className="space-y-2"></div>
+
+                                <Button
+                                  onClick={handleClubChangeRequest}
+                                  className="w-full"
+                                >
+                                  Submit Request
+                                </Button>
+                              </div>
+                            </DialogContent>
+                          </Dialog>
+                        )}
+                      </div>

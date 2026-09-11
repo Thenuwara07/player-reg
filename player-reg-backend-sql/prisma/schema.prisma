@@ -1,0 +1,186 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "mysql"
+  url      = env("DATABASE_URL")
+}
+
+model User {
+  id                 Int          @id @default(autoincrement())
+  email              String       @unique
+  password           String
+  fullName           String
+  firstName          String
+  lastName           String
+  nicNum             String?       @unique
+  contact            String
+  dateofBirth        DateTime
+  gender             String
+  role               String       @default("player") // player or admin
+  status             String       @default("pending")
+  district           String // District field
+  profilePictureName String       @default("default.jpg") // Profile picture with default
+  createdAt          DateTime     @default(now())
+  player             Player?
+  payment            Payment[]
+  clubchange         Clubchange[]
+  posts              Post[]
+  settings Setting?
+}
+
+model Player {
+  id                   Int       @id @default(autoincrement())
+  slbfId               String?   @unique
+  user                 User      @relation(fields: [userId], references: [id])
+  userId               Int       @unique
+  weight               Int
+  height               Int
+  idType               String
+  idFrontImage         String?
+  idBackImage          String?
+  closeAssId           Int?
+  closeClubId          Int?
+  closeClubChagngeDate DateTime?
+  openAssId            Int?
+  openClubId           Int?
+  openClubChagngeDate  DateTime?
+  regDate              DateTime?
+  regExpDate           DateTime?
+  createdAt            DateTime  @default(now())
+  updatedAt            DateTime  @updatedAt
+
+  // Relations (<<< add these)
+  openAssociation  Associations? @relation("PlayerOpenAssociation", fields: [openAssId], references: [id])
+  closeAssociation Closeclubs?   @relation("PlayerCloseAssociation", fields: [closeAssId], references: [id])
+}
+
+model Payment {
+  id          Int       @id @default(autoincrement())
+  userId      Int
+  user        User      @relation(fields: [userId], references: [id])
+  slipImage   String
+  referenceNo String    @default("N/A")
+  status      String    @default("pending")
+  createdAt   DateTime  @default(now())
+  updatedAt   DateTime? @updatedAt
+}
+
+model Clubchange {
+  id          Int       @id @default(autoincrement())
+  userId      Int
+  user        User      @relation(fields: [userId], references: [id])
+  type        String
+  oldAssId    Int?
+  oldAssCode  String?
+  oldAssName  String?
+  oldClubId   Int?
+  oldClubCode String?
+  oldClubName String?
+  oldImage    String?
+  resignDate  String?
+  newAssId    Int?
+  newAssCode  String?
+  newAssName  String?
+  newClubId   Int?
+  newClubCode String?
+  newClubName String?
+  newImage    String?
+  status      String    @default("pending")
+  createdAt   DateTime  @default(now())
+  updatedAt   DateTime? @updatedAt
+}
+
+model Schools {
+  id        Int       @id @default(autoincrement())
+  name      String
+  code      String    @unique
+  town      String
+  status    String
+  createdAt DateTime  @default(now())
+  updatedAt DateTime? @updatedAt
+}
+
+model Associations {
+  id        Int         @id @default(autoincrement())
+  name      String
+  code      String      @unique
+  status    String
+  createdAt DateTime    @default(now())
+  updatedAt DateTime?   @updatedAt
+  openclubs Openclubs[]
+
+  // back relation name must match the relation name above
+  playersOpen Player[] @relation("PlayerOpenAssociation")
+}
+
+model Openclubs {
+  id             Int          @id @default(autoincrement())
+  name           String
+  code           String       @unique
+  associationsId Int
+  associations   Associations @relation(fields: [associationsId], references: [id])
+  status         String
+  createdAt      DateTime     @default(now())
+  updatedAt      DateTime?    @updatedAt
+}
+
+model Mercantileclubs {
+  id        Int       @id @default(autoincrement())
+  name      String
+  code      String    @unique
+  status    String
+  createdAt DateTime  @default(now())
+  updatedAt DateTime? @updatedAt
+}
+
+model Closeclubs {
+  id        Int       @id @default(autoincrement())
+  name      String
+  code      String    @unique
+  status    String
+  createdAt DateTime  @default(now())
+  updatedAt DateTime? @updatedAt
+
+  playersClose Player[] @relation("PlayerCloseAssociation")
+}
+
+model Universities {
+  id        Int       @id @default(autoincrement())
+  name      String
+  type      String
+  code      String    @unique
+  status    String
+  createdAt DateTime  @default(now())
+  updatedAt DateTime? @updatedAt
+}
+
+model Post {
+  id        Int     @id @default(autoincrement())
+  title     String
+  subtitle  String?
+  content   String
+  imageName String
+
+  // relation to User (author)
+  userId Int
+  user   User @relation(fields: [userId], references: [id])
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+}
+
+model Setting {
+  id        Int     @id @default(autoincrement())
+  herotitle     String
+  herosubtitle  String?
+  imageName String
+  openclubchangeperiodMonths Int  @default(1) 
+  // relation to User (author)
+  userId Int @unique
+  user   User @relation(fields: [userId], references: [id])
+
+  updatedAt DateTime @updatedAt
+}
+
