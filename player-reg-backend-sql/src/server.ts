@@ -1,8 +1,6 @@
-// Load environment variables before anything else is imported, so that
-// modules which read process.env at import time (e.g. lib/env.ts) see them.
-import dotenv from "dotenv";
-dotenv.config();
 
+// Must be the first import: modules read process.env when they are loaded
+import "dotenv/config";
 import app from "./app";
 
 const PORT = process.env.PORT || 5000;
