@@ -1,18 +1,14 @@
 import { Request, Response } from "express";
 import bcrypt from "bcryptjs";
 import jwt from "jsonwebtoken";
-import { PrismaClient } from "@prisma/client";
 import { PrismaClientKnownRequestError } from "@prisma/client/runtime/library";
-
-const prisma = new PrismaClient();
-
-const JWT_SECRET = process.env.JWT_SECRET!;
+import prisma from "../lib/prisma";
+import { JWT_SECRET } from "../lib/env";
 
 export const signUp = async (req: Request, res: Response): Promise<void> => {
   console.log("Received signup request with body:", req.body);
   try {
     const {
-      id,
       fullName,
       email,
       password,
@@ -43,7 +39,6 @@ export const signUp = async (req: Request, res: Response): Promise<void> => {
 
     const newUser = await prisma.user.create({
       data: {
-        id,
         fullName,
         email,
         password: hashedPassword,
@@ -268,8 +263,6 @@ export const getPlayerDetails = async (
       error: "Failed to retrieve user details",
       details: error instanceof Error ? error.message : error,
     });
-  } finally {
-    await prisma.$disconnect();
   }
 };
 
@@ -303,18 +296,31 @@ export const getAllPlayers = async (
       ? (sortOrder as "asc" | "desc")
       : "asc";
 
-    // 4. Fetch users from database
+    // 4. Fetch users from database (password excluded — never send hashes to clients)
     const users = await prisma.user.findMany({
-      // select: userFields,
+      select: {
+        id: true,
+        email: true,
+        fullName: true,
+        firstName: true,
+        lastName: true,
+        nicNum: true,
+        contact: true,
+        dateofBirth: true,
+        gender: true,
+        role: true,
+        status: true,
+        district: true,
+        profilePictureName: true,
+        createdAt: true,
+        player: true,
+      },
       orderBy: {
         [sortBy as string]: validatedSortOrder,
       },
       where: {
         // Optional: Add filters here if needed
         role: "player", // Assuming you only want players
-      },
-      include: {
-        player: true,
       },
     });
 

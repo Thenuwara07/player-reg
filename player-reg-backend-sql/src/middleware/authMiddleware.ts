@@ -1,7 +1,6 @@
 import { Request, Response, NextFunction } from "express";
 import jwt from "jsonwebtoken";
-
-const JWT_SECRET = process.env.JWT_SECRET || "your-secret-key";
+import { JWT_SECRET } from "../lib/env";
 
 // Extend Request type to allow user
 declare module "express-serve-static-core" {

@@ -1,4 +1,6 @@
 node_modules
 .env
 ngrok.txt
+ngrok.exe
 uploads
+dist

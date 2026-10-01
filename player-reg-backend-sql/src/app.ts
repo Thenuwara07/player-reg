@@ -1,7 +1,6 @@
 import express from "express";
 import cors from "cors";
 import dotenv from "dotenv";
-import { PrismaClient } from "@prisma/client";
 
 import authRoutes from "./routes/authRoutes";
 import adminRoutes from "./routes/adminRoutes";
@@ -12,7 +11,6 @@ import postRoutes from "./routes/postRoutes";
 dotenv.config();
 
 const app = express();
-const prisma = new PrismaClient();
 
 // ✅ Allowed origins
 const allowedOrigins = [
@@ -62,5 +60,25 @@ app.use("/api/user", userRoutes);
 app.get("/", (req, res) => {
   res.send("Welcome to the Players Registration API");
 });
+
+// ✅ JSON error handler — without this, any error passed to next(err)
+// (e.g. from multer/CORS) falls through to Express's default HTML error
+// page, which breaks every frontend caller expecting response.json().
+app.use(
+  (
+    err: any,
+    req: express.Request,
+    res: express.Response,
+    // eslint-disable-next-line @typescript-eslint/no-unused-vars
+    next: express.NextFunction
+  ) => {
+    console.error("Unhandled error:", err);
+    if (res.headersSent) return;
+    res.status(err?.status || err?.statusCode || 500).json({
+      success: false,
+      message: err?.message || "Internal server error",
+    });
+  }
+);
 
 export default app;
