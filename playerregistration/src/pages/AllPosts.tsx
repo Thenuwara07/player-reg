@@ -11,7 +11,8 @@ import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Link, useLocation, useSearchParams } from "react-router-dom";
-import { Plus, User, CalendarDays, Search, Pencil, Trash2 } from "lucide-react";
+import { Plus, User, CalendarDays, Search, Pencil, Trash2, Loader2 } from "lucide-react";
+import { useSubmitLock } from "@/hooks/useSubmitLock";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Post } from "../types/authTypes";
 import { GetPosts, deletePost } from "@/api/postApi";
@@ -68,6 +69,7 @@ const AllPosts: React.FC = () => {
   const [search, setSearch] = useState(initialQ);
   const [posts, setPosts] = useState<PostRow[]>([]);
   const [deletingId, setDeletingId] = useState<number | null>(null); // for dialog state
+  const deleteLock = useSubmitLock();
 
   useEffect(() => {
     fetchPosts();
@@ -209,7 +211,7 @@ const AllPosts: React.FC = () => {
       {/* Confirm Delete Dialog */}
       <AlertDialog
         open={deletingId !== null}
-        onOpenChange={(open) => !open && setDeletingId(null)}
+        onOpenChange={(open) => !open && !deleteLock.pending && setDeletingId(null)}
       >
         <AlertDialogContent>
           <AlertDialogHeader>
@@ -220,12 +222,24 @@ const AllPosts: React.FC = () => {
             </AlertDialogDescription>
           </AlertDialogHeader>
           <AlertDialogFooter>
-            <AlertDialogCancel>Cancel</AlertDialogCancel>
+            <AlertDialogCancel disabled={deleteLock.pending}>Cancel</AlertDialogCancel>
             <AlertDialogAction
               className="bg-destructive text-destructive-foreground hover:bg-destructive/90"
-              onClick={() => deletingId !== null && handleDelete(deletingId)}
+              disabled={deleteLock.pending}
+              onClick={deleteLock.guard(async (e: React.MouseEvent) => {
+                // Keep the dialog open until the delete finishes
+                e.preventDefault();
+                if (deletingId !== null) await handleDelete(deletingId);
+              })}
             >
-              Delete
+              {deleteLock.pending ? (
+                <>
+                  <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                  Deleting...
+                </>
+              ) : (
+                "Delete"
+              )}
             </AlertDialogAction>
           </AlertDialogFooter>
         </AlertDialogContent>

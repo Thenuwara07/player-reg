@@ -731,6 +731,7 @@
 // export default SignUp;
 
 import React, { useState, useRef } from "react";
+import { useSubmitLock } from "@/hooks/useSubmitLock";
 import { Link, useNavigate } from "react-router-dom";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -752,6 +753,13 @@ import {
 import { toast } from "sonner";
 import { registerUser } from "../api/authApi";
 import { imageUpload, saveFileLocally } from "../api/fileApi";
+import {
+  DOCUMENT_ACCEPT,
+  IMAGE_ACCEPT,
+  isPdfFile,
+  pdfPlaceholder,
+  validateUploadFile,
+} from "../utils/fileValidation";
 import { set } from "date-fns";
 
 const SignUp = () => {
@@ -816,6 +824,8 @@ const SignUp = () => {
   };
 
   const [isLoading, setIsLoading] = useState(false);
+  // Blocks repeat submits, even before the button re-renders as disabled
+  const submitLock = useSubmitLock();
   const frontFileRef = useRef<HTMLInputElement>(null);
   const backFileRef = useRef<HTMLInputElement>(null);
   const profileFileRef = useRef<HTMLInputElement>(null);
@@ -889,20 +899,23 @@ const SignUp = () => {
   ) => {
     const file = e.target.files?.[0];
     if (file) {
-      if (!file.type.match("image.*")) {
-        toast.error("Please select an image file (JPEG, PNG)");
-        return;
-      }
-      if (file.size > 2 * 1024 * 1024) {
-        toast.error("File size should be less than 2MB");
+      // ID images may also be a PDF; the profile picture must be PNG/JPEG
+      const error = validateUploadFile(file, { allowPdf: type !== "profile" });
+      if (error) {
+        toast.error(error);
+        e.target.value = "";
         return;
       }
 
-      const reader = new FileReader();
-      reader.onloadend = () => {
-        setPreviews((prev) => ({ ...prev, [type]: reader.result as string }));
-      };
-      reader.readAsDataURL(file);
+      if (isPdfFile(file)) {
+        setPreviews((prev) => ({ ...prev, [type]: pdfPlaceholder(file.name) }));
+      } else {
+        const reader = new FileReader();
+        reader.onloadend = () => {
+          setPreviews((prev) => ({ ...prev, [type]: reader.result as string }));
+        };
+        reader.readAsDataURL(file);
+      }
 
       const filename = await saveFileLocally(file);
       if (type === "profile") {
@@ -1015,7 +1028,7 @@ const SignUp = () => {
             </CardDescription> */}
           </CardHeader>
           <CardContent>
-            <form onSubmit={handleSubmit} className="space-y-6">
+            <form onSubmit={submitLock.guard(handleSubmit)} className="space-y-6">
               {/* ✅ Mobile: column | Desktop: row (your current style) */}
               <div className="flex flex-col lg:flex-row gap-6 lg:gap-10">
                 {/* ✅ Mobile full width | Desktop half */}
@@ -1050,7 +1063,7 @@ const SignUp = () => {
                           ref={profileFileRef}
                           onChange={(e) => handleFileChange("profile", e)}
                           // onChange={(e) => setFile(e.target.files?.[0] || null)}
-                          accept="image/*"
+                          accept={IMAGE_ACCEPT}
                           className="hidden"
                           id="profilePicture"
                         />
@@ -1376,7 +1389,7 @@ const SignUp = () => {
                           type="file"
                           ref={frontFileRef}
                           onChange={(e) => handleFileChange("front", e)}
-                          accept="image/*"
+                          accept={DOCUMENT_ACCEPT}
                           className="hidden"
                           id="frontImage"
                         />
@@ -1424,7 +1437,7 @@ const SignUp = () => {
                           type="file"
                           ref={backFileRef}
                           onChange={(e) => handleFileChange("back", e)}
-                          accept="image/*"
+                          accept={DOCUMENT_ACCEPT}
                           className="hidden"
                           id="backImage"
                         />

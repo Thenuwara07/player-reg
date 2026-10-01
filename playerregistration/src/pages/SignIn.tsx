@@ -1,4 +1,5 @@
 import React, { useState } from "react";
+import { useSubmitLock } from "@/hooks/useSubmitLock";
 import { Link, useNavigate } from "react-router-dom";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -22,6 +23,8 @@ const SignIn = () => {
     setFormData((prev) => ({ ...prev, [field]: value }));
   };
   const [isLoading, setIsLoading] = useState(false);
+  // Blocks repeat submits, even before the button re-renders as disabled
+  const submitLock = useSubmitLock();
   const { login } = useAuth();
   const navigate = useNavigate();
 
@@ -67,7 +70,7 @@ const SignIn = () => {
             </CardDescription>
           </CardHeader>
           <CardContent>
-            <form onSubmit={handleSubmit} className="space-y-4">
+            <form onSubmit={submitLock.guard(handleSubmit)} className="space-y-4">
               <div className="space-y-2">
                 <Label htmlFor="email">Email</Label>
                 <Input

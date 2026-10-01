@@ -1,4 +1,6 @@
 import React, { useState, useEffect } from "react";
+import { Loader2 } from "lucide-react";
+import { useSubmitLock } from "@/hooks/useSubmitLock";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -47,6 +49,12 @@ import {
 import { FaTimes } from "react-icons/fa";
 import { imageUpload, saveFileLocally } from "../api/fileApi";
 import {
+  DOCUMENT_ACCEPT,
+  isPdfFile,
+  pdfPlaceholder,
+  validateUploadFile,
+} from "../utils/fileValidation";
+import {
   regRequest,
   clubchangeRequest,
   userdetailsUpdate,
@@ -81,6 +89,8 @@ const Profile = () => {
   const [loading, setLoading] = useState(true);
   const [regopen, setRegopen] = useState(false);
   const [showConfirm, setShowConfirm] = useState<boolean>(false);
+  // Disables submit buttons while a request is in progress
+  const submitLock = useSubmitLock();
   const [formData, setFormData] = useState<DefaultDetails | null>(null);
 
   const currentUser = playerInfo;
@@ -505,21 +515,23 @@ const Profile = () => {
   ) => {
     const file = e.target.files?.[0];
     if (file) {
-      if (!file.type.match("image.*")) {
-        toast.error("Please select an image file (JPEG, PNG)");
-        return;
-      }
-      if (file.size > 2 * 1024 * 1024) {
-        toast.error("File size should be less than 2MB");
+      // PNG/JPEG (compressed to < 2MB before upload) or a PDF under 2MB
+      const error = validateUploadFile(file, { allowPdf: true });
+      if (error) {
+        toast.error(error);
+        e.target.value = "";
         return;
       }
 
-      const reader = new FileReader();
-      reader.onloadend = () => {
-        setPreviews((prev) => ({ ...prev, [type]: reader.result as string }));
-      };
-
-      reader.readAsDataURL(file);
+      if (isPdfFile(file)) {
+        setPreviews((prev) => ({ ...prev, [type]: pdfPlaceholder(file.name) }));
+      } else {
+        const reader = new FileReader();
+        reader.onloadend = () => {
+          setPreviews((prev) => ({ ...prev, [type]: reader.result as string }));
+        };
+        reader.readAsDataURL(file);
+      }
 
       const filename = await saveFileLocally(file);
       if (type === "slip") {
@@ -864,7 +876,7 @@ const Profile = () => {
                                     </DialogHeader>
 
                                     <form
-                                      onSubmit={handleRegSubmit}
+                                      onSubmit={submitLock.guard(handleRegSubmit)}
                                       className="space-y-6"
                                     >
                                       <div className="space-y-4">
@@ -912,7 +924,7 @@ const Profile = () => {
                                                 onChange={(e) =>
                                                   handleFileChange("slip", e)
                                                 }
-                                                accept="image/*"
+                                                accept={DOCUMENT_ACCEPT}
                                                 className="hidden"
                                                 id="slipImage"
                                               />
@@ -944,8 +956,16 @@ const Profile = () => {
                                         <Button
                                           type="submit"
                                           className="w-full"
+                                          disabled={submitLock.pending}
                                         >
-                                          Submit
+                                          {submitLock.pending ? (
+                                            <>
+                                              <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                                              Submitting...
+                                            </>
+                                          ) : (
+                                            "Submit"
+                                          )}
                                         </Button>
                                       </div>
                                     </form>
@@ -1002,7 +1022,7 @@ const Profile = () => {
                                     </DialogHeader>
 
                                     <form
-                                      onSubmit={handleRegSubmit}
+                                      onSubmit={submitLock.guard(handleRegSubmit)}
                                       className="space-y-6"
                                     >
                                       <div className="space-y-4">
@@ -1050,7 +1070,7 @@ const Profile = () => {
                                                 onChange={(e) =>
                                                   handleFileChange("slip", e)
                                                 }
-                                                accept="image/*"
+                                                accept={DOCUMENT_ACCEPT}
                                                 className="hidden"
                                                 id="slipImage"
                                               />
@@ -1082,8 +1102,16 @@ const Profile = () => {
                                         <Button
                                           type="submit"
                                           className="w-full"
+                                          disabled={submitLock.pending}
                                         >
-                                          Submit
+                                          {submitLock.pending ? (
+                                            <>
+                                              <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                                              Submitting...
+                                            </>
+                                          ) : (
+                                            "Submit"
+                                          )}
                                         </Button>
                                       </div>
                                     </form>
@@ -1352,7 +1380,7 @@ const Profile = () => {
                                                 )
                                               }
                                               // onChange={(e) => setFile(e.target.files?.[0] || null)}
-                                              accept="image/*"
+                                              accept={DOCUMENT_ACCEPT}
                                               className="hidden"
                                               id="currentLetterImage"
                                               required
@@ -1502,7 +1530,7 @@ const Profile = () => {
                                               handleFileChange("newletter", e)
                                             }
                                             // onChange={(e) => setFile(e.target.files?.[0] || null)}
-                                            accept="image/*"
+                                            accept={DOCUMENT_ACCEPT}
                                             className="hidden"
                                             id="newLetterImage"
                                           />
@@ -1534,10 +1562,18 @@ const Profile = () => {
                                 <div className="space-y-2"></div>
 
                                 <Button
-                                  onClick={handleClubChangeRequest}
+                                  onClick={submitLock.guard(handleClubChangeRequest)}
                                   className="w-full"
+                                  disabled={submitLock.pending}
                                 >
-                                  Submit Request
+                                  {submitLock.pending ? (
+                                    <>
+                                      <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                                      Submitting...
+                                    </>
+                                  ) : (
+                                    "Submit Request"
+                                  )}
                                 </Button>
                               </div>
                             </DialogContent>
@@ -1710,7 +1746,7 @@ const Profile = () => {
                                                 )
                                               }
                                               // onChange={(e) => setFile(e.target.files?.[0] || null)}
-                                              accept="image/*"
+                                              accept={DOCUMENT_ACCEPT}
                                               className="hidden"
                                               id="currentLetterImage"
                                             />
@@ -1923,7 +1959,7 @@ const Profile = () => {
                                                 handleFileChange("newletter", e)
                                               }
                                               // onChange={(e) => setFile(e.target.files?.[0] || null)}
-                                              accept="image/*"
+                                              accept={DOCUMENT_ACCEPT}
                                               className="hidden"
                                               id="newLetterImage"
                                             />
@@ -1956,10 +1992,18 @@ const Profile = () => {
                                 <div className="space-y-2"></div>
 
                                 <Button
-                                  onClick={handleClubChangeRequest}
+                                  onClick={submitLock.guard(handleClubChangeRequest)}
                                   className="w-full"
+                                  disabled={submitLock.pending}
                                 >
-                                  Submit Request
+                                  {submitLock.pending ? (
+                                    <>
+                                      <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                                      Submitting...
+                                    </>
+                                  ) : (
+                                    "Submit Request"
+                                  )}
                                 </Button>
                               </div>
                             </DialogContent>
@@ -2023,7 +2067,8 @@ const Profile = () => {
         <ConfirmProfileModal
           open={showConfirm}
           data={editData}
-          onConfirm={confirmSave}
+          onConfirm={submitLock.guard(confirmSave)}
+          loading={submitLock.pending}
           onCancel={cancelSave}
         />
       </div>

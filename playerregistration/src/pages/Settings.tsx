@@ -358,6 +358,7 @@
 
 
 import React, { useEffect, useState } from "react";
+import { useSubmitLock } from "@/hooks/useSubmitLock";
 import {
   Card,
   CardContent,
@@ -382,9 +383,8 @@ import { GetdeafaultDetails } from "@/api/postApi";
 import { updateDetails } from "@/api/detailsApi";
 import type { DefaultDetails } from "@/types/authTypes";
 import { imageUpload } from "@/api/fileApi";
+import { IMAGE_ACCEPT, validateUploadFile } from "@/utils/fileValidation";
 import { useAuth } from "@/contexts/AuthContext";
-
-const MAX_IMG_BYTES = 4 * 1024 * 1024; // 4MB
 const IMG_URL = (import.meta.env.VITE_IMG_URL as string) || "http://localhost:5000/uploads";
 
 const SettingsPage: React.FC = () => {
@@ -393,6 +393,8 @@ const SettingsPage: React.FC = () => {
   // State
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
+  // Blocks repeat submits, even before the button re-renders as disabled
+  const submitLock = useSubmitLock();
   const [formData, setFormData] = useState<DefaultDetails | null>(null);
 
   // File Upload State
@@ -461,15 +463,14 @@ const SettingsPage: React.FC = () => {
     if (e.target.files && e.target.files[0]) {
       const file = e.target.files[0];
 
-      if (!file.type.startsWith("image/")) {
-        setUploadError("Please select an image file.");
+      // PNG/JPEG only; large photos are compressed to < 2MB before upload
+      const error = validateUploadFile(file, { allowPdf: false });
+      if (error) {
+        setUploadError(error);
+        e.target.value = "";
         return;
       }
-      if (file.size > MAX_IMG_BYTES) {
-        setUploadError("Image is too large (max 4 MB). Please choose a smaller file.");
-        return;
-      }
-      
+
       setSelectedFile(file);
       setPreviewUrl(URL.createObjectURL(file)); 
     }
@@ -549,7 +550,7 @@ const SettingsPage: React.FC = () => {
           </div>
         </div>
 
-        <form onSubmit={handleSubmit}>
+        <form onSubmit={submitLock.guard(handleSubmit)}>
           <div className="grid gap-6">
             {/* 1. Hero Configuration Card */}
             <Card className="border-none shadow-xl">
@@ -610,7 +611,7 @@ const SettingsPage: React.FC = () => {
                         id="imageUpload"
                         type="file"
                         className="hidden"
-                        accept="image/*"
+                        accept={IMAGE_ACCEPT}
                         onChange={handleFileChange}
                       />
                       <Button
