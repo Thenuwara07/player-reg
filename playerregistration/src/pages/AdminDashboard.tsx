@@ -49,6 +49,7 @@ import {
   Clock,
   Users,
   Settings,
+  ScrollText,
   Contact,
   NfcIcon,
   FileText,
@@ -736,7 +737,23 @@ const AdminDashboard = () => {
                   </CardContent>
                 </Card>
               </Link> */}
-              <Link to="/settings" className="fixed bottom-8 right-8 z-50">
+              {/* Activity logs: sits just left of the settings button */}
+              <Link
+                to="/logs"
+                className="fixed bottom-8 right-28 z-50"
+                title="Activity Logs"
+                aria-label="Activity Logs"
+              >
+                <Card className="w-16 h-16 rounded-2xl flex items-center justify-center shadow-2xl border-2 hover:border-primary hover:scale-105 transition-all duration-300 group bg-white">
+                  <ScrollText className="w-8 h-8 text-gray-600 group-hover:scale-110 transition-transform duration-300" />
+                </Card>
+              </Link>
+              <Link
+                to="/settings"
+                className="fixed bottom-8 right-8 z-50"
+                title="Settings"
+                aria-label="Settings"
+              >
                 <Card className="w-16 h-16 rounded-2xl flex items-center justify-center shadow-2xl border-2 hover:border-primary hover:scale-105 transition-all duration-300 group bg-white">
                   {/* The Wheel Icon */}
                   <Settings className="w-8 h-8 text-gray-600 group-hover:rotate-90 transition-transform duration-500" />

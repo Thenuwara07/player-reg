@@ -2,7 +2,9 @@ import { Toaster } from "@/components/ui/toaster";
 import { Toaster as Sonner } from "@/components/ui/sonner";
 import { TooltipProvider } from "@/components/ui/tooltip";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
+import { useEffect } from "react";
 import { BrowserRouter, Routes, Route, Navigate } from "react-router-dom";
+import { toast } from "sonner";
 import { AuthProvider, useAuth } from "@/contexts/AuthContext";
 import Header from "@/components/Layout/Header";
 import Footer from "@/components/Layout/Footer";
@@ -20,15 +22,30 @@ import AllPosts from "@/pages/AllPosts";
 import PostCreateEdit from "@/pages/PostCreateEdit";
 import PublicRoute from "@/routes/PublicRoute";
 import Settings  from "@/pages/Settings";
+import Logs from "@/pages/Logs";
 
 const queryClient = new QueryClient();
+
+// Redirects with a "permission denied" message
+const DeniedRedirect = ({ to, message }: { to: string; message: string }) => {
+  useEffect(() => {
+    // Fixed id: StrictMode runs effects twice in dev; show the toast once
+    toast.error(message, { id: "permission-denied" });
+  }, [message]);
+  return <Navigate to={to} replace />;
+};
 
 const ProtectedRoute = ({
   children,
   adminOnly = false,
+  deniedRedirectTo,
+  deniedMessage,
 }: {
   children: React.ReactNode;
   adminOnly?: boolean;
+  /** Where non-admins go; shows deniedMessage. Defaults to /dashboard. */
+  deniedRedirectTo?: string;
+  deniedMessage?: string;
 }) => {
   const { isLoading } = useAuth();
   const user = sessionStorage.getItem("userData")
@@ -43,6 +60,14 @@ const ProtectedRoute = ({
   }
 
   if (user.role !== "admin") {
+    if (deniedRedirectTo) {
+      return (
+        <DeniedRedirect
+          to={deniedRedirectTo}
+          message={deniedMessage ?? "Permission denied."}
+        />
+      );
+    }
     return <Navigate to="/dashboard" replace />;
   }
 
@@ -109,6 +134,13 @@ const AppContent = () => {
               </ProtectedRoute>} />
           <Route path="/settings" element={<ProtectedRoute adminOnly={true}>
                 <Settings />
+              </ProtectedRoute>} />
+          <Route path="/logs" element={<ProtectedRoute
+                adminOnly={true}
+                deniedRedirectTo="/"
+                deniedMessage="Permission denied: only admins can view the activity logs."
+              >
+                <Logs />
               </ProtectedRoute>} />
           {/* <Route path="/posts/:id" element={<PostDetails />} /> */}
 

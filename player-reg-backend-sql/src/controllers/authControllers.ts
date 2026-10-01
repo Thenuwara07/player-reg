@@ -4,6 +4,13 @@ import jwt from "jsonwebtoken";
 import { PrismaClientKnownRequestError } from "@prisma/client/runtime/library";
 import prisma from "../lib/prisma";
 import { JWT_SECRET } from "../lib/env";
+import { logActivity, logRequestActivity } from "../lib/activityLog";
+
+// POST /api/auth/logout — the token itself is stateless; this only records it
+export const signOut = async (req: Request, res: Response): Promise<void> => {
+  logRequestActivity(req, "User logged out");
+  res.status(200).json({ success: true });
+};
 
 export const signUp = async (req: Request, res: Response): Promise<void> => {
   console.log("Received signup request with body:", req.body);
@@ -55,6 +62,11 @@ export const signUp = async (req: Request, res: Response): Promise<void> => {
       },
     });
     console.log("Creating player profile for user:", newUser.id);
+    logActivity(
+      newUser.id,
+      newUser.role,
+      `New ${newUser.role} account registered (${newUser.email})`
+    );
     if (role === "player") {
       console.log("2");
       await prisma.player.create({
@@ -98,12 +110,18 @@ export const signIn = async (req: Request, res: Response): Promise<void> => {
     }
 
     if (!user) {
+      logActivity(
+        null,
+        "guest",
+        `Failed login: no account for "${String(username).slice(0, 100)}"`
+      );
       res.status(404).json({ error: "User not found" });
       return;
     }
 
     const isMatch = await bcrypt.compare(password, user.password);
     if (!isMatch) {
+      logActivity(user.id, user.role, "Failed login: wrong password");
       res.status(401).json({ error: "Invalid credentials" });
       return;
     }
@@ -111,6 +129,7 @@ export const signIn = async (req: Request, res: Response): Promise<void> => {
     const token = jwt.sign({ id: user.id, role: user.role }, JWT_SECRET, {
       expiresIn: "1d",
     });
+    logActivity(user.id, user.role, "User logged in");
 
     res.json({
       token,

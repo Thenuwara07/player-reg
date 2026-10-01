@@ -2,6 +2,7 @@
 import { Request, Response } from "express";
 import { Prisma } from "@prisma/client";
 import prisma from "../lib/prisma";
+import { logRequestActivity } from "../lib/activityLog";
 
 // Safe fields to expose for User
 const SAFE_USER_SELECT = {
@@ -60,6 +61,8 @@ export const createPost = async (req: Request, res: Response): Promise<void> => 
       },
       include: { user: { select: SAFE_USER_SELECT } },
     });
+
+    logRequestActivity(req, `Created post "${post.title}"`);
 
     res.status(201).json({
       success: true,
@@ -156,6 +159,8 @@ export const updatePost = async (req: Request, res: Response): Promise<void> => 
       include: { user: { select: SAFE_USER_SELECT } },
     });
 
+    logRequestActivity(req, `Updated post "${updated.title}"`);
+
     res.status(200).json({
       success: true,
       message: "Post updated successfully",
@@ -184,7 +189,8 @@ export const deletePost = async (req: Request, res: Response): Promise<void> => 
       return;
     }
 
-    await prisma.post.delete({ where: { id } });
+    const deleted = await prisma.post.delete({ where: { id } });
+    logRequestActivity(req, `Deleted post "${deleted.title}"`);
 
     res.status(200).json({
       success: true,
