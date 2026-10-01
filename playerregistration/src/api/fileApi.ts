@@ -1,11 +1,13 @@
-import { Filename } from "../types/index";
+import { compressImage } from "../utils/imageCompression";
 
 const API_BASE_URL = import.meta.env.VITE_API_URL;
 
-export const imageUpload = async (file: File): Promise<Filename> => {
+// Uploads an image (compressed to < 2 MB first) and returns its public URL.
+export const imageUpload = async (file: File): Promise<string> => {
   try {
+    const compressed = await compressImage(file);
     const formData = new FormData();
-    formData.append("image", file);
+    formData.append("image", compressed, compressed.name);
     const response = await fetch(`${API_BASE_URL}/upload/image`, {
       method: "POST",
       body: formData,

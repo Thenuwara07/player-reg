@@ -72,6 +72,20 @@ import NewAdminConfirmModel from "../components/models/NewAdminConfirmModel";
 import { Link } from "react-router-dom";
 import { getPostCount } from "@/api/postApi";
 import { X, ExternalLink } from "lucide-react"; // Icons
+import { isPdfUrl, toDisplayImageUrl } from "@/utils/fileValidation";
+
+// Uploaded PDFs are previewed as an image of page 1; this opens the full file
+const PdfLink = ({ url }: { url?: string | null }) =>
+  isPdfUrl(url) ? (
+    <a
+      href={url!}
+      target="_blank"
+      rel="noopener noreferrer"
+      className="ml-2 inline-flex items-center gap-1 text-sm text-blue-600 hover:underline"
+    >
+      Open PDF <ExternalLink className="h-3 w-3" />
+    </a>
+  ) : null;
 
 const AdminDashboard = () => {
   const { user } = useAuth();
@@ -1329,13 +1343,14 @@ const AdminDashboard = () => {
             <div className="space-y-4">
               <div>
                 <Label>ID Front</Label>
+                <PdfLink url={selectedUser?.player?.idFrontImage} />
                 <div className="flex gap-4 p-4 transition-all duration-300">
                   {/* LEFT SIDE: The Thumbnail/Initial View */}
                   <div
                     className={`${expandedView === "front" ? "w-1/2" : "w-full"} transition-all`}
                   >
                     <img
-                      src={selectedUser?.player?.idFrontImage}
+                      src={toDisplayImageUrl(selectedUser?.player?.idFrontImage)}
                       alt="ID Front"
                       className="w-full h-52 object-cover rounded-lg border cursor-pointer hover:opacity-90 transition"
                       onClick={() =>
@@ -1365,7 +1380,7 @@ const AdminDashboard = () => {
                       {/* Full Image Container */}
                       <div className="w-full h-full flex items-center justify-center p-2 bg-gray-100">
                         <img
-                          src={selectedUser?.player?.idFrontImage}
+                          src={toDisplayImageUrl(selectedUser?.player?.idFrontImage)}
                           alt="Full ID Front"
                           className="max-w-full max-h-full object-contain shadow-lg"
                         />
@@ -1377,13 +1392,14 @@ const AdminDashboard = () => {
 
               <div>
                 <Label>ID Back</Label>
+                <PdfLink url={selectedUser?.player?.idBackImage} />
                 <div className="flex gap-4 p-4 transition-all duration-300">
                   {/* LEFT SIDE: The Thumbnail/Initial View */}
                   <div
                     className={`${expandedView === "back" ? "w-1/2" : "w-full"} transition-all`}
                   >
                     <img
-                      src={selectedUser?.player?.idBackImage}
+                      src={toDisplayImageUrl(selectedUser?.player?.idBackImage)}
                       alt="ID Back"
                       className="w-full h-52 object-cover rounded-lg border cursor-pointer hover:opacity-90 transition"
                       onClick={() =>
@@ -1411,7 +1427,7 @@ const AdminDashboard = () => {
                       {/* Full Image Container */}
                       <div className="w-full h-full flex items-center justify-center p-2 bg-gray-100">
                         <img
-                          src={selectedUser?.player?.idBackImage}
+                          src={toDisplayImageUrl(selectedUser?.player?.idBackImage)}
                           alt="Full ID Back"
                           className="max-w-full max-h-full object-contain shadow-lg"
                         />
@@ -1508,6 +1524,7 @@ const AdminDashboard = () => {
               </div>
               <div>
                 <Label>Payment Slip</Label>
+                <PdfLink url={regUser?.slipImage} />
                 {/* <img
                   src={`${regUser?.slipImage}`}
                   alt="slip"
@@ -1519,7 +1536,7 @@ const AdminDashboard = () => {
                     className={`${isExpanded ? "w-1/2" : "w-full"} transition-all`}
                   >
                     <img
-                      src={regUser?.slipImage}
+                      src={toDisplayImageUrl(regUser?.slipImage)}
                       alt="ID Back"
                       className="w-full h-52 object-cover rounded-lg border cursor-pointer hover:opacity-90 transition"
                       onClick={() => setIsExpanded(!isExpanded)}
@@ -1545,7 +1562,7 @@ const AdminDashboard = () => {
                       {/* Full Image Container */}
                       <div className="w-full h-full flex items-center justify-center p-2 bg-gray-100">
                         <img
-                          src={regUser?.slipImage}
+                          src={toDisplayImageUrl(regUser?.slipImage)}
                           alt="Full ID Back"
                           className="max-w-full max-h-full object-contain shadow-lg"
                         />
@@ -1639,8 +1656,9 @@ const AdminDashboard = () => {
                 </div>
                 <div>
                   <Label>Resignation Letter</Label>
+                <PdfLink url={clubchangeuser?.oldImage} />
                   <img
-                    src={`${clubchangeuser?.oldImage}`}
+                    src={toDisplayImageUrl(clubchangeuser?.oldImage)}
                     alt="Resignation Letter"
                     className="w-full h-[300px] object-cover rounded-lg border"
                   />
@@ -1669,8 +1687,9 @@ const AdminDashboard = () => {
               </div>
               <div>
                 <Label>Offer Letter</Label>
+                <PdfLink url={clubchangeuser?.newImage} />
                 <img
-                  src={`${clubchangeuser?.newImage}`}
+                  src={toDisplayImageUrl(clubchangeuser?.newImage)}
                   alt="Offer Letter"
                   className="w-full h-[300px] object-cover rounded-lg border"
                 />
