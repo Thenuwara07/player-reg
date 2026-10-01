@@ -358,6 +358,7 @@
 
 
 import React, { useEffect, useState } from "react";
+import { useSubmitLock } from "@/hooks/useSubmitLock";
 import {
   Card,
   CardContent,
@@ -392,6 +393,8 @@ const SettingsPage: React.FC = () => {
   // State
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
+  // Blocks repeat submits, even before the button re-renders as disabled
+  const submitLock = useSubmitLock();
   const [formData, setFormData] = useState<DefaultDetails | null>(null);
 
   // File Upload State
@@ -547,7 +550,7 @@ const SettingsPage: React.FC = () => {
           </div>
         </div>
 
-        <form onSubmit={handleSubmit}>
+        <form onSubmit={submitLock.guard(handleSubmit)}>
           <div className="grid gap-6">
             {/* 1. Hero Configuration Card */}
             <Card className="border-none shadow-xl">

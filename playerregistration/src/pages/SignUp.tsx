@@ -731,6 +731,7 @@
 // export default SignUp;
 
 import React, { useState, useRef } from "react";
+import { useSubmitLock } from "@/hooks/useSubmitLock";
 import { Link, useNavigate } from "react-router-dom";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -823,6 +824,8 @@ const SignUp = () => {
   };
 
   const [isLoading, setIsLoading] = useState(false);
+  // Blocks repeat submits, even before the button re-renders as disabled
+  const submitLock = useSubmitLock();
   const frontFileRef = useRef<HTMLInputElement>(null);
   const backFileRef = useRef<HTMLInputElement>(null);
   const profileFileRef = useRef<HTMLInputElement>(null);
@@ -1025,7 +1028,7 @@ const SignUp = () => {
             </CardDescription> */}
           </CardHeader>
           <CardContent>
-            <form onSubmit={handleSubmit} className="space-y-6">
+            <form onSubmit={submitLock.guard(handleSubmit)} className="space-y-6">
               {/* ✅ Mobile: column | Desktop: row (your current style) */}
               <div className="flex flex-col lg:flex-row gap-6 lg:gap-10">
                 {/* ✅ Mobile full width | Desktop half */}

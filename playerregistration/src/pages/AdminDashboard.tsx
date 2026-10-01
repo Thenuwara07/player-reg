@@ -71,6 +71,9 @@ import { generate1partSLBFId, idrestgenerator } from "../lib/idGenerator";
 import NewAdminConfirmModel from "../components/models/NewAdminConfirmModel";
 import { Link } from "react-router-dom";
 import { getPostCount } from "@/api/postApi";
+
+import { X, ExternalLink, Loader2 } from "lucide-react"; // Icons
+import { useSubmitLock } from "@/hooks/useSubmitLock";
 import { X, ExternalLink } from "lucide-react"; // Icons
 import { isPdfUrl, toDisplayImageUrl } from "@/utils/fileValidation";
 
@@ -131,6 +134,8 @@ const AdminDashboard = () => {
   // const IMG_URL = import.meta.env.VITE_IMG_URL;
   const IMG_URL = import.meta.env.VITE_IMG_URL as string;
   const [showConfirm, setShowConfirm] = useState<boolean>(false);
+  // Disables action buttons while a request is in progress
+  const actionLock = useSubmitLock();
   const [postCount, setPostCount] = useState<number>(0);
   const [notRegisteredPlayerCount, setNotRegisteredPlayerCount] =
     useState<number>(0);
@@ -1245,7 +1250,7 @@ const AdminDashboard = () => {
             </p>
             <div className="flex justify-center gap-4">
               <button
-                onClick={() => {
+                onClick={actionLock.guard(async () => {
                   const rejectUser = {
                     id: selectedUser?.id?.toString() || "",
                     table: "user",
@@ -1266,25 +1271,34 @@ const AdminDashboard = () => {
                   };
 
                   if (showRejectModal.message === "reject this user") {
-                    handleReject(rejectUser);
+                    await handleReject(rejectUser);
                   } else if (
                     showRejectModal.message === "reject this payment"
                   ) {
-                    handleReject(rejectPayment);
+                    await handleReject(rejectPayment);
                   } else if (
                     showRejectModal.message === "reject this club change"
                   ) {
-                    handleReject(rejectClubchange);
+                    await handleReject(rejectClubchange);
                   }
                   setShowRejectModal({ show: false, message: "" });
-                }}
-                className="bg-red-500 hover:bg-red-600 text-white px-4 py-2 rounded"
+                }, "reject")}
+                disabled={actionLock.pending}
+                className="bg-red-500 hover:bg-red-600 text-white px-4 py-2 rounded inline-flex items-center disabled:opacity-50 disabled:cursor-not-allowed"
               >
-                Yes, Reject
+                {actionLock.pendingKey === "reject" ? (
+                  <>
+                    <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                    Rejecting...
+                  </>
+                ) : (
+                  "Yes, Reject"
+                )}
               </button>
               <button
                 onClick={() => setShowRejectModal({ show: false, message: "" })}
-                className="bg-gray-200 hover:bg-gray-300 text-gray-800 px-4 py-2 rounded"
+                disabled={actionLock.pending}
+                className="bg-gray-200 hover:bg-gray-300 text-gray-800 px-4 py-2 rounded disabled:opacity-50 disabled:cursor-not-allowed"
               >
                 Cancel
               </button>
@@ -1445,12 +1459,13 @@ const AdminDashboard = () => {
                 setShowRejectModal({ show: true, message: "reject this user" });
                 setShowPdetailsModal(false);
               }}
-              className="bg-red-500 hover:bg-red-600 text-white px-4 py-2 rounded"
+              disabled={actionLock.pending}
+              className="bg-red-500 hover:bg-red-600 text-white px-4 py-2 rounded disabled:opacity-50 disabled:cursor-not-allowed"
             >
               Reject
             </button>
             <Button
-              onClick={() =>
+              onClick={actionLock.guard(() =>
                 handleUserApproval(
                   selectedUser?.id?.toString(),
                   selectedUser?.player?.id?.toString(),
@@ -1459,9 +1474,17 @@ const AdminDashboard = () => {
                     : undefined,
                   selectedUser?.district,
                 )
-              }
+              )}
+              disabled={actionLock.pending}
             >
-              Approve
+              {actionLock.pendingKey === "approve" ? (
+                <>
+                  <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                  Approving...
+                </>
+              ) : (
+                "Approve"
+              )}
             </Button>
           </div>
         </DialogContent>
@@ -1583,21 +1606,30 @@ const AdminDashboard = () => {
                 });
                 setShowPaymentdetailsModal(false);
               }}
-              className="bg-red-500 hover:bg-red-600 text-white px-4 py-2 rounded"
+              disabled={actionLock.pending}
+              className="bg-red-500 hover:bg-red-600 text-white px-4 py-2 rounded disabled:opacity-50 disabled:cursor-not-allowed"
             >
               Reject
             </button>
             <Button
-              onClick={() =>
+              onClick={actionLock.guard(() =>
                 handleUserpaymentApproval(
                   regUser?.userId?.toString(),
                   regUser?.id?.toString(),
                   regUser?.user?.player?.id?.toString(),
                   regUser?.user?.player?.slbfId,
                 )
-              }
+              )}
+              disabled={actionLock.pending}
             >
-              Approve
+              {actionLock.pendingKey === "approve" ? (
+                <>
+                  <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                  Approving...
+                </>
+              ) : (
+                "Approve"
+              )}
             </Button>
           </div>
         </DialogContent>
@@ -1706,12 +1738,13 @@ const AdminDashboard = () => {
                 });
                 setCulbchangedetailsModel(false);
               }}
-              className="bg-red-500 hover:bg-red-600 text-white px-4 py-2 rounded"
+              disabled={actionLock.pending}
+              className="bg-red-500 hover:bg-red-600 text-white px-4 py-2 rounded disabled:opacity-50 disabled:cursor-not-allowed"
             >
               Reject
             </button>
             <Button
-              onClick={() =>
+              onClick={actionLock.guard(() =>
                 handleClubChangeRequest(
                   clubchangeuser?.id?.toString(),
                   clubchangeuser?.user?.player?.id?.toString(),
@@ -1730,9 +1763,17 @@ const AdminDashboard = () => {
                   clubchangeuser?.oldClubName,
                   clubchangeuser?.oldClubCode,
                 )
-              }
+              )}
+              disabled={actionLock.pending}
             >
-              Approve
+              {actionLock.pendingKey === "approve" ? (
+                <>
+                  <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                  Approving...
+                </>
+              ) : (
+                "Approve"
+              )}
             </Button>
           </div>
         </DialogContent>
@@ -1741,7 +1782,8 @@ const AdminDashboard = () => {
       <NewAdminConfirmModel
         open={showConfirm}
         data={newAdminData}
-        onConfirm={confirmCreate}
+        onConfirm={actionLock.guard(confirmCreate, "create")}
+        loading={actionLock.pending}
         onCancel={cancelCreate}
       />
     </div>

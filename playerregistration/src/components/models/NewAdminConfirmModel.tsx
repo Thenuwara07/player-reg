@@ -20,6 +20,8 @@ interface NewAdminConfirmModelProps {
   data: NewAdminData;
   onConfirm: () => void;
   onCancel: () => void;
+  /** True while creating: buttons are disabled to prevent double submits */
+  loading?: boolean;
 }
 
 const ConfirmProfileModal: React.FC<NewAdminConfirmModelProps> = ({
@@ -27,16 +29,19 @@ const ConfirmProfileModal: React.FC<NewAdminConfirmModelProps> = ({
   data,
   onConfirm,
   onCancel,
+  loading = false,
 }) => {
-  if (!open) return null;
-
+  // Hooks must run before the early return so hook order never changes
   useEffect(() => {
+    if (!open) return;
     const onKey = (e: KeyboardEvent) => {
-      if (e.key === "Escape") onCancel();
+      if (e.key === "Escape" && !loading) onCancel();
     };
     window.addEventListener("keydown", onKey);
     return () => window.removeEventListener("keydown", onKey);
-  }, [onCancel]);
+  }, [open, onCancel, loading]);
+
+  if (!open) return null;
 
   const portalRoot = document.getElementById("modal-root") ?? document.body;
 
@@ -117,12 +122,14 @@ const ConfirmProfileModal: React.FC<NewAdminConfirmModelProps> = ({
           <button
             type="button"
             onClick={onCancel}
+            disabled={loading}
             style={{
               padding: "10px 14px",
               borderRadius: 8,
               border: "1px solid #ddd",
               background: "#fff",
-              cursor: "pointer",
+              cursor: loading ? "not-allowed" : "pointer",
+              opacity: loading ? 0.6 : 1,
             }}
           >
             Cancel
@@ -130,16 +137,18 @@ const ConfirmProfileModal: React.FC<NewAdminConfirmModelProps> = ({
           <button
             type="button"
             onClick={onConfirm}
+            disabled={loading}
             style={{
               padding: "10px 14px",
               borderRadius: 8,
               border: "none",
               background: "#2563eb",
               color: "#fff",
-              cursor: "pointer",
+              cursor: loading ? "not-allowed" : "pointer",
+              opacity: loading ? 0.6 : 1,
             }}
           >
-            Confirm & Create
+            {loading ? "Creating..." : "Confirm & Create"}
           </button>
         </div>
       </div>
