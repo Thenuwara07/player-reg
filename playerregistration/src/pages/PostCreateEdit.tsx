@@ -5,7 +5,8 @@ import { useLocation, useNavigate, Link } from "react-router-dom";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
-import { X, Upload, Image as ImageIcon } from "lucide-react";
+import { X, Upload, Image as ImageIcon, Loader2 } from "lucide-react";
+import { useSubmitLock } from "@/hooks/useSubmitLock";
 import { toast } from "sonner";
 import { imageUpload } from "@/api/fileApi";
 import { createPost, updatePost } from "@/api/postApi";
@@ -42,6 +43,7 @@ const PostCreateEdit: React.FC = () => {
       : undefined;
 
   // form state
+  const submitLock = useSubmitLock();
   const [title, setTitle] = useState<string>(editingPost?.title ?? "");
   const [subtitle, setSubtitle] = useState<string>(editingPost?.subtitle ?? "");
   const [content, setContent] = useState<string>(editingPost?.content ?? "");
@@ -273,7 +275,7 @@ const PostCreateEdit: React.FC = () => {
 
               {/* RIGHT: Form fields */}
               <div className="lg:col-span-3">
-                <form onSubmit={handleSubmit} className="space-y-6">
+                <form onSubmit={submitLock.guard(handleSubmit)} className="space-y-6">
                   {/* Title */}
                   <div>
                     <label className="block mb-2 text-sm font-medium">Title</label>
@@ -338,8 +340,15 @@ const PostCreateEdit: React.FC = () => {
                   </div>
 
                   <div className="pt-2">
-                    <Button type="submit" disabled={!canSave}>
-                      {submitLabel}
+                    <Button type="submit" disabled={!canSave || submitLock.pending}>
+                      {submitLock.pending ? (
+                        <>
+                          <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                          Saving...
+                        </>
+                      ) : (
+                        submitLabel
+                      )}
                     </Button>
                   </div>
                 </form>

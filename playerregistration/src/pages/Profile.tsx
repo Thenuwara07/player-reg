@@ -1,4 +1,6 @@
 import React, { useState, useEffect } from "react";
+import { Loader2 } from "lucide-react";
+import { useSubmitLock } from "@/hooks/useSubmitLock";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -81,6 +83,8 @@ const Profile = () => {
   const [loading, setLoading] = useState(true);
   const [regopen, setRegopen] = useState(false);
   const [showConfirm, setShowConfirm] = useState<boolean>(false);
+  // Disables submit buttons while a request is in progress
+  const submitLock = useSubmitLock();
   const [formData, setFormData] = useState<DefaultDetails | null>(null);
 
   const currentUser = playerInfo;
@@ -864,7 +868,7 @@ const Profile = () => {
                                     </DialogHeader>
 
                                     <form
-                                      onSubmit={handleRegSubmit}
+                                      onSubmit={submitLock.guard(handleRegSubmit)}
                                       className="space-y-6"
                                     >
                                       <div className="space-y-4">
@@ -944,8 +948,16 @@ const Profile = () => {
                                         <Button
                                           type="submit"
                                           className="w-full"
+                                          disabled={submitLock.pending}
                                         >
-                                          Submit
+                                          {submitLock.pending ? (
+                                            <>
+                                              <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                                              Submitting...
+                                            </>
+                                          ) : (
+                                            "Submit"
+                                          )}
                                         </Button>
                                       </div>
                                     </form>
@@ -1002,7 +1014,7 @@ const Profile = () => {
                                     </DialogHeader>
 
                                     <form
-                                      onSubmit={handleRegSubmit}
+                                      onSubmit={submitLock.guard(handleRegSubmit)}
                                       className="space-y-6"
                                     >
                                       <div className="space-y-4">
@@ -1082,8 +1094,16 @@ const Profile = () => {
                                         <Button
                                           type="submit"
                                           className="w-full"
+                                          disabled={submitLock.pending}
                                         >
-                                          Submit
+                                          {submitLock.pending ? (
+                                            <>
+                                              <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                                              Submitting...
+                                            </>
+                                          ) : (
+                                            "Submit"
+                                          )}
                                         </Button>
                                       </div>
                                     </form>
@@ -1534,10 +1554,18 @@ const Profile = () => {
                                 <div className="space-y-2"></div>
 
                                 <Button
-                                  onClick={handleClubChangeRequest}
+                                  onClick={submitLock.guard(handleClubChangeRequest)}
                                   className="w-full"
+                                  disabled={submitLock.pending}
                                 >
-                                  Submit Request
+                                  {submitLock.pending ? (
+                                    <>
+                                      <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                                      Submitting...
+                                    </>
+                                  ) : (
+                                    "Submit Request"
+                                  )}
                                 </Button>
                               </div>
                             </DialogContent>
@@ -1956,10 +1984,18 @@ const Profile = () => {
                                 <div className="space-y-2"></div>
 
                                 <Button
-                                  onClick={handleClubChangeRequest}
+                                  onClick={submitLock.guard(handleClubChangeRequest)}
                                   className="w-full"
+                                  disabled={submitLock.pending}
                                 >
-                                  Submit Request
+                                  {submitLock.pending ? (
+                                    <>
+                                      <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                                      Submitting...
+                                    </>
+                                  ) : (
+                                    "Submit Request"
+                                  )}
                                 </Button>
                               </div>
                             </DialogContent>
@@ -2023,7 +2059,8 @@ const Profile = () => {
         <ConfirmProfileModal
           open={showConfirm}
           data={editData}
-          onConfirm={confirmSave}
+          onConfirm={submitLock.guard(confirmSave)}
+          loading={submitLock.pending}
           onCancel={cancelSave}
         />
       </div>
