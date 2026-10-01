@@ -1,6 +1,7 @@
 import { Request, Response } from "express";
 import { PrismaClientKnownRequestError } from "@prisma/client/runtime/library";
 import prisma from "../lib/prisma";
+import { logRequestActivity } from "../lib/activityLog";
 
 export const regRequest = async (
   req: Request,
@@ -25,6 +26,10 @@ export const regRequest = async (
         slipImage,
       },
     });
+    logRequestActivity(
+      req,
+      `Submitted registration payment slip (Ref: ${referenceNo})`
+    );
 
     res.status(201).json({
       success: true,
@@ -80,6 +85,12 @@ export const clubchangeRequest = async (
         resignDate: resignDate,
       },
     });
+    logRequestActivity(
+      req,
+      `Requested ${type} club change to ${newAss || newAssCode}${
+        newClub ? ` / ${newClub}` : ""
+      }`
+    );
 
     res.status(201).json({
       success: true,
@@ -130,6 +141,20 @@ export const updateUserAndPlayer = async (
         },
       }),
     ]);
+    const changedFields = Object.entries({
+      firstName,
+      lastName,
+      contact,
+      email,
+      height,
+      weight,
+    })
+      .filter(([, value]) => value !== undefined && value !== "")
+      .map(([field]) => field);
+    logRequestActivity(
+      req,
+      `Updated profile details (${changedFields.join(", ") || "no fields"})`
+    );
 
     res.status(200).json({
       success: true,
