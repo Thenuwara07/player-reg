@@ -28,6 +28,7 @@ model User {
   clubchange         Clubchange[]
   posts              Post[]
   settings Setting?
+  activityLogs       ActivityLog[]
 }
 
 model Player {
@@ -184,3 +185,17 @@ model Setting {
   updatedAt DateTime @updatedAt
 }
 
+// Audit trail of user/admin actions. Rows older than 1 month are deleted
+// automatically (see src/lib/activityLog.ts).
+model ActivityLog {
+  id          Int      @id @default(autoincrement())
+  createdAt   DateTime @default(now())
+  // Null for actions by unknown users (e.g. failed login with a bad email)
+  userId      Int?
+  user        User?    @relation(fields: [userId], references: [id], onDelete: SetNull)
+  role        String // player | admin | guest
+  description String   @db.VarChar(500)
+
+  @@index([createdAt])
+  @@index([userId])
+}

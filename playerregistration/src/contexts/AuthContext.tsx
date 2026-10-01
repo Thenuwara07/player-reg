@@ -114,6 +114,15 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({
   // };
 
   const logout = () => {
+    // Record the logout in the activity log (best effort, don't wait)
+    const token = sessionStorage.getItem("authToken");
+    if (token) {
+      fetch(`${API_BASE_URL}/auth/logout`, {
+        method: "POST",
+        headers: { Authorization: `Bearer ${token}` },
+        keepalive: true,
+      }).catch(() => {});
+    }
     setUser(null);
     sessionStorage.removeItem("userData");
     sessionStorage.removeItem("authToken");

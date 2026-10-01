@@ -3,6 +3,60 @@ import { PrismaClientKnownRequestError } from "@prisma/client/runtime/library";
 import { Prisma } from "@prisma/client";
 import bcrypt from "bcryptjs";
 import prisma from "../lib/prisma";
+import { logRequestActivity, userDisplayName } from "../lib/activityLog";
+
+// --- Activity log descriptions for the dashboard's generic field updates ---
+
+const ownerName = (table: string, record: any) =>
+  userDisplayName(table === "user" ? record?.id : record?.userId);
+
+const recordLabel = (table: string, record: any) => {
+  switch (table) {
+    case "user":
+      return "player account";
+    case "payment":
+      return `registration payment (Ref: ${record?.referenceNo ?? "N/A"})`;
+    case "clubchange":
+      return `${record?.type ?? ""} club change request`.trim();
+    default:
+      return `${table} record`;
+  }
+};
+
+const describeFieldUpdate = async (
+  table: string,
+  record: any,
+  column: string,
+  value: unknown
+): Promise<string> => {
+  const name = await ownerName(table, record);
+  if (column === "status") {
+    const label = recordLabel(table, record);
+    if (value === "rejected") return `Rejected ${label} of ${name}`;
+    if (value === "approved" || value === "confirmed")
+      return `Approved ${label} of ${name}`;
+    return `Set ${label} status of ${name} to "${value}"`;
+  }
+  if (table === "player" && column === "slbfId") {
+    return `Assigned SLBF ID ${value} to ${name}`;
+  }
+  return `Updated ${table} ${column} of ${name} to "${value}"`;
+};
+
+const describeFieldsUpdate = async (
+  table: string,
+  record: any,
+  updates: Record<string, unknown>
+): Promise<string> => {
+  const name = await ownerName(table, record);
+  if (table === "player" && ("openClubId" in updates || "openAssId" in updates)) {
+    return `Updated open club of ${name}${updates.slbfId ? ` (SLBF ID: ${updates.slbfId})` : ""}`;
+  }
+  if (table === "player" && ("closeClubId" in updates || "closeAssId" in updates)) {
+    return `Updated close club of ${name}${updates.slbfId ? ` (SLBF ID: ${updates.slbfId})` : ""}`;
+  }
+  return `Updated ${table} of ${name} (${Object.keys(updates).join(", ")})`;
+};
 
 // Generic table/column updaters below are admin-only, but the table and
 // column names still come straight from the request body. Restrict them to
@@ -140,6 +194,10 @@ export const updatetableField = async (
       where: { id: parseInt(id) },
       data: { [column]: value },
     });
+    logRequestActivity(
+      req,
+      await describeFieldUpdate(table, updatedRecord, column, value)
+    );
 
     res.status(200).json({
       success: true,
@@ -187,6 +245,10 @@ export const updatetableFields = async (
       where: { id: parseInt(id, 10) },
       data: updates,
     });
+    logRequestActivity(
+      req,
+      await describeFieldsUpdate(table, updatedRecord, updates)
+    );
 
     res.status(200).json({
       success: true,
@@ -354,6 +416,10 @@ export const updatePlayerRegDates = async (
         regExpDate: new Date(expDate),
       },
     });
+    logRequestActivity(
+      req,
+      `Set registration period of ${await userDisplayName(updatedPlayer.userId)}: ${new Date(regDate).toISOString().slice(0, 10)} to ${new Date(expDate).toISOString().slice(0, 10)}`
+    );
 
     res.status(200).json({
       success: true,
@@ -985,6 +1051,10 @@ export const signUpAdmin = async (
       },
     });
     console.log("Creating player profile for user:", newUser.id);
+    logRequestActivity(
+      req,
+      `Created admin account for ${newUser.firstName} ${newUser.lastName} (${newUser.email})`
+    );
 
     res.status(201).json({ success: "User registered successfully" });
   } catch (error) {
@@ -1545,6 +1615,12 @@ export const updateDetails = async (req: Request, res: Response): Promise<void> 
         updatedAt: new Date(),
       }
     });
+    logRequestActivity(
+      req,
+      `Updated site settings (${Object.keys(changes)
+        .filter((key) => key !== "updatedAt" && key !== "userId")
+        .join(", ")})`
+    );
 
     res.status(200).json({
       success: true,
