@@ -71,10 +71,8 @@ import { generate1partSLBFId, idrestgenerator } from "../lib/idGenerator";
 import NewAdminConfirmModel from "../components/models/NewAdminConfirmModel";
 import { Link } from "react-router-dom";
 import { getPostCount } from "@/api/postApi";
-
 import { X, ExternalLink, Loader2 } from "lucide-react"; // Icons
 import { useSubmitLock } from "@/hooks/useSubmitLock";
-import { X, ExternalLink } from "lucide-react"; // Icons
 import { isPdfUrl, toDisplayImageUrl } from "@/utils/fileValidation";
 
 // Uploaded PDFs are previewed as an image of page 1; this opens the full file
