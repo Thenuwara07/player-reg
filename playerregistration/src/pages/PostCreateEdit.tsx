@@ -9,6 +9,7 @@ import { X, Upload, Image as ImageIcon, Loader2 } from "lucide-react";
 import { useSubmitLock } from "@/hooks/useSubmitLock";
 import { toast } from "sonner";
 import { imageUpload } from "@/api/fileApi";
+import { IMAGE_ACCEPT, validateUploadFile } from "@/utils/fileValidation";
 import { createPost, updatePost } from "@/api/postApi";
 import { useAuth } from "@/contexts/AuthContext";
 
@@ -24,8 +25,6 @@ type PostEditable = {
   createdAt: string; // YYYY-MM-DD (for input)
   imageName: string; // server filename OR data URL (preview only)
 };
-
-const MAX_IMG_BYTES = 4 * 1024 * 1024; // 4MB
 
 const PostCreateEdit: React.FC = () => {
   const { user } = useAuth();
@@ -89,12 +88,11 @@ const PostCreateEdit: React.FC = () => {
     const file = e.target.files?.[0];
     if (!file) return;
 
-    if (!file.type.startsWith("image/")) {
-      setUploadError("Please select an image file.");
-      return;
-    }
-    if (file.size > MAX_IMG_BYTES) {
-      setUploadError("Image is too large (max 4 MB). Please choose a smaller file.");
+    // PNG/JPEG only; large photos are compressed to < 2MB before upload
+    const error = validateUploadFile(file, { allowPdf: false });
+    if (error) {
+      setUploadError(error);
+      e.target.value = "";
       return;
     }
 
@@ -251,7 +249,7 @@ const PostCreateEdit: React.FC = () => {
                       <Input
                         id="post-image"
                         type="file"
-                        accept="image/*"
+                        accept={IMAGE_ACCEPT}
                         className="hidden"
                         onChange={handleFileChange}
                       />

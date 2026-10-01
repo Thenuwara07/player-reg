@@ -49,6 +49,12 @@ import {
 import { FaTimes } from "react-icons/fa";
 import { imageUpload, saveFileLocally } from "../api/fileApi";
 import {
+  DOCUMENT_ACCEPT,
+  isPdfFile,
+  pdfPlaceholder,
+  validateUploadFile,
+} from "../utils/fileValidation";
+import {
   regRequest,
   clubchangeRequest,
   userdetailsUpdate,
@@ -509,21 +515,23 @@ const Profile = () => {
   ) => {
     const file = e.target.files?.[0];
     if (file) {
-      if (!file.type.match("image.*")) {
-        toast.error("Please select an image file (JPEG, PNG)");
-        return;
-      }
-      if (file.size > 2 * 1024 * 1024) {
-        toast.error("File size should be less than 2MB");
+      // PNG/JPEG (compressed to < 2MB before upload) or a PDF under 2MB
+      const error = validateUploadFile(file, { allowPdf: true });
+      if (error) {
+        toast.error(error);
+        e.target.value = "";
         return;
       }
 
-      const reader = new FileReader();
-      reader.onloadend = () => {
-        setPreviews((prev) => ({ ...prev, [type]: reader.result as string }));
-      };
-
-      reader.readAsDataURL(file);
+      if (isPdfFile(file)) {
+        setPreviews((prev) => ({ ...prev, [type]: pdfPlaceholder(file.name) }));
+      } else {
+        const reader = new FileReader();
+        reader.onloadend = () => {
+          setPreviews((prev) => ({ ...prev, [type]: reader.result as string }));
+        };
+        reader.readAsDataURL(file);
+      }
 
       const filename = await saveFileLocally(file);
       if (type === "slip") {
@@ -916,7 +924,7 @@ const Profile = () => {
                                                 onChange={(e) =>
                                                   handleFileChange("slip", e)
                                                 }
-                                                accept="image/*"
+                                                accept={DOCUMENT_ACCEPT}
                                                 className="hidden"
                                                 id="slipImage"
                                               />
@@ -1062,7 +1070,7 @@ const Profile = () => {
                                                 onChange={(e) =>
                                                   handleFileChange("slip", e)
                                                 }
-                                                accept="image/*"
+                                                accept={DOCUMENT_ACCEPT}
                                                 className="hidden"
                                                 id="slipImage"
                                               />
@@ -1372,7 +1380,7 @@ const Profile = () => {
                                                 )
                                               }
                                               // onChange={(e) => setFile(e.target.files?.[0] || null)}
-                                              accept="image/*"
+                                              accept={DOCUMENT_ACCEPT}
                                               className="hidden"
                                               id="currentLetterImage"
                                               required
@@ -1522,7 +1530,7 @@ const Profile = () => {
                                               handleFileChange("newletter", e)
                                             }
                                             // onChange={(e) => setFile(e.target.files?.[0] || null)}
-                                            accept="image/*"
+                                            accept={DOCUMENT_ACCEPT}
                                             className="hidden"
                                             id="newLetterImage"
                                           />
@@ -1738,7 +1746,7 @@ const Profile = () => {
                                                 )
                                               }
                                               // onChange={(e) => setFile(e.target.files?.[0] || null)}
-                                              accept="image/*"
+                                              accept={DOCUMENT_ACCEPT}
                                               className="hidden"
                                               id="currentLetterImage"
                                             />
@@ -1951,7 +1959,7 @@ const Profile = () => {
                                                 handleFileChange("newletter", e)
                                               }
                                               // onChange={(e) => setFile(e.target.files?.[0] || null)}
-                                              accept="image/*"
+                                              accept={DOCUMENT_ACCEPT}
                                               className="hidden"
                                               id="newLetterImage"
                                             />
