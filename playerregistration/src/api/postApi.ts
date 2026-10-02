@@ -159,7 +159,6 @@ export const getPostCount = async (params?: {
     method: "GET",
     headers: {
       "ngrok-skip-browser-warning": "true", // Skip ngrok browser warning
-      "User-Agent": "Custom User-Agent",
       "Content-Type": "application/json",
       ...(token ? { Authorization: `Bearer ${token}` } : {}),
     },
@@ -189,7 +188,6 @@ export const GetdeafaultDetails = async (): Promise<DefaultDetails[]> => {
       headers: {
         "ngrok-skip-browser-warning": "true", // Skip ngrok browser warning
         // "Authorization": `Bearer ${token}`,  // Uncomment if using token
-        "User-Agent": "Custom User-Agent",  // Optional, usually handled by browser
         "Content-Type": "application/json",
       },
     });

@@ -352,7 +352,6 @@ export const GetAdminDetails = async (): Promise<User1[]> => {
       method: "GET",
       headers: {
         "ngrok-skip-browser-warning": "true", // Skip ngrok browser warning
-        "User-Agent": "Custom User-Agent", // Optional, usually handled by browser
         "Content-Type": "application/json",
         Authorization: `Bearer ${token}`,
       },
@@ -383,7 +382,6 @@ export const getNotRegisteredPlayerCount = async (): Promise<number> => {
       method: "GET",
       headers: {
         "ngrok-skip-browser-warning": "true", // Skip ngrok browser warning
-        "User-Agent": "Custom User-Agent", // Optional, usually handled by browser
         "Content-Type": "application/json",
         Authorization: `Bearer ${token}`,
       },
@@ -417,7 +415,6 @@ export async function getAllPlayers(params?: {
     method: "GET",
     headers: {
       "ngrok-skip-browser-warning": "true", // Skip ngrok browser warning
-      "User-Agent": "Custom User-Agent", // Optional, usually handled by browser
       "Content-Type": "application/json",
       ...(token ? { Authorization: `Bearer ${token}` } : {}),
     },
