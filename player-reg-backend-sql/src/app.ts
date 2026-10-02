@@ -16,7 +16,13 @@ const app = express();
 const allowedOrigins = [
   "http://localhost:5173",
   "http://localhost:8080",
-  "https://playerregistration-five.vercel.app"
+  "https://player-reg.vercel.app",
+  "https://playerregistration-five.vercel.app",
+  // Extra origins without a code change: CORS_ORIGINS="https://a.com,https://b.com"
+  ...(process.env.CORS_ORIGINS ?? "")
+    .split(",")
+    .map((origin) => origin.trim().replace(/\/+$/, ""))
+    .filter(Boolean),
 ];
 
 // ✅ CORS configuration (robust)
