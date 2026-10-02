@@ -9,7 +9,6 @@ export const playerDetails = async (userId: number): Promise<User> => {
       method: "GET",
       headers: {
         "ngrok-skip-browser-warning": "true",  // Skip ngrok browser warning
-        "User-Agent": "Custom User-Agent",  // Optional, usually handled by browser
         "Content-Type": "application/json",
       },
     });
@@ -33,7 +32,6 @@ export const AllplayerDetails = async (): Promise<User1[]> => {
       method: "GET",
       headers: {
         "ngrok-skip-browser-warning": "true",  // Skip ngrok browser warning
-        "User-Agent": "Custom User-Agent",  // Optional, usually handled by browser
         "Content-Type": "application/json",
       },
     });
@@ -57,7 +55,6 @@ export const AllCloseclubsDetails = async (): Promise<Closeclub[]> => {
       method: "GET",
       headers: {
         "ngrok-skip-browser-warning": "true",  // Skip ngrok browser warning
-        "User-Agent": "Custom User-Agent",  // Optional, usually handled by browser
         "Content-Type": "application/json",
       },
     });
@@ -81,7 +78,6 @@ export const AllOpenclubsDetails = async (): Promise<Openclub[]> => {
       method: "GET",
       headers: {
         "ngrok-skip-browser-warning": "true",  // Skip ngrok browser warning
-        "User-Agent": "Custom User-Agent",  // Optional, usually handled by browser
         "Content-Type": "application/json",
       },
     });
@@ -105,7 +101,6 @@ export const AllSchools = async (): Promise<School[]> => {
       method: "GET",
       headers: {
         "ngrok-skip-browser-warning": "true",  // Skip ngrok browser warning
-        "User-Agent": "Custom User-Agent",  // Optional, usually handled by browser
         "Content-Type": "application/json",
       },
     });
@@ -129,7 +124,6 @@ export const AllUniversities = async (): Promise<University[]> => {
       method: "GET",
       headers: {
         "ngrok-skip-browser-warning": "true",  // Skip ngrok browser warning
-        "User-Agent": "Custom User-Agent",  // Optional, usually handled by browser
         "Content-Type": "application/json",
       },
     });
@@ -153,7 +147,6 @@ export const AllMercClubs = async (): Promise<MercClub[]> => {
       method: "GET",
       headers: {
         "ngrok-skip-browser-warning": "true",  // Skip ngrok browser warning
-        "User-Agent": "Custom User-Agent",  // Optional, usually handled by browser
         "Content-Type": "application/json",
       },
     });
@@ -177,7 +170,6 @@ export const AllAssociations = async (): Promise<MercClub[]> => {
       method: "GET",
       headers: {
         "ngrok-skip-browser-warning": "true",  // Skip ngrok browser warning
-        "User-Agent": "Custom User-Agent",  // Optional, usually handled by browser
         "Content-Type": "application/json",
       },
     });
@@ -201,7 +193,6 @@ export const AllOpenClubsByAssociationId = async (assId: number): Promise<MercCl
       method: "GET",
       headers: {
         "ngrok-skip-browser-warning": "true",  // Skip ngrok browser warning
-        "User-Agent": "Custom User-Agent",  // Optional, usually handled by browser
         "Content-Type": "application/json",
       },
     });

@@ -18,7 +18,6 @@ export const GetdeafaultDetails = async (): Promise<DefaultDetails[]> => {
       headers: {
         "ngrok-skip-browser-warning": "true", // Skip ngrok browser warning
         // "Authorization": `Bearer ${token}`,  // Uncomment if using token
-        "User-Agent": "Custom User-Agent",  // Optional, usually handled by browser
         "Content-Type": "application/json",
       },
     });
