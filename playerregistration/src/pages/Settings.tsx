@@ -387,6 +387,16 @@ import { IMAGE_ACCEPT, validateUploadFile } from "@/utils/fileValidation";
 import { useAuth } from "@/contexts/AuthContext";
 const IMG_URL = (import.meta.env.VITE_IMG_URL as string) || "http://localhost:5000/uploads";
 
+// Starting values when no settings have been saved yet
+const EMPTY_SETTINGS: DefaultDetails = {
+  id: 1,
+  herotitle: "",
+  herosubtitle: "",
+  imageName: "",
+  openclubchangeperiodMonths: "1",
+  userId: "",
+};
+
 const SettingsPage: React.FC = () => {
   const { user } = useAuth();
   
@@ -426,8 +436,10 @@ const SettingsPage: React.FC = () => {
         initialData = data as DefaultDetails;
       }
 
+      // No settings saved yet (fresh database): start with an empty form so
+      // the inputs are editable; the first Save creates the settings row.
+      setFormData(initialData ?? EMPTY_SETTINGS);
       if (initialData) {
-        setFormData(initialData);
         // Set initial preview if imageName exists
         if (initialData.imageName) {
           const url = initialData.imageName.startsWith("http")
