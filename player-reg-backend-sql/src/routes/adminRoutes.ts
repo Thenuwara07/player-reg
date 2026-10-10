@@ -1,7 +1,7 @@
 import express from "express";
 import { getPendingPlayers, updatetableField, getPendingReg, getClubchangePendingReq, updatePlayerRegDates, getAllCloseclubs, getAllOpenclubs, getAllMercclubs, getAllSchools, getAllUniversities, getAllAssociations, getOpenClubsByAssociationId, getAssociationById, getClubById, updatetableFields, signUpAdmin, getAlladmin, getNotRegisteredPlayerCount, getAllPlayers, getApprovedClubchangesByUser, updateDetails } from "../controllers/adminControllers";
 import { getActivityLogs } from "../controllers/logController";
-import { authenticateToken, authorizeRoles } from "../middleware/authMiddleware";
+import { authenticateToken, authorizeRoles, optionalAuth } from "../middleware/authMiddleware";
 
 const router = express.Router();
 
@@ -23,7 +23,8 @@ router.get("/getclubdetails/:type/:associationId/:clubId",getClubById);
 router.post("/signupadmin", authenticateToken, authorizeRoles("admin"), signUpAdmin);
 router.get("/alladmins", authenticateToken, authorizeRoles("admin"), getAlladmin);
 router.get("/notregisteredplayercount", authenticateToken, authorizeRoles("admin"), getNotRegisteredPlayerCount);
-router.get("/allplayers",  getAllPlayers);
+// Public list without contact/NIC/birth date; admins get everything
+router.get("/allplayers", optionalAuth, getAllPlayers);
 router.get("/clubchanges/:userId", getApprovedClubchangesByUser);
 // router.get("/getassclubdetails/:associationId",getCloseAssociationById);
 router.put("/details", authenticateToken, authorizeRoles("admin"), updateDetails);

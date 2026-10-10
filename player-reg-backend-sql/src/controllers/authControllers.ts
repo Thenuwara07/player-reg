@@ -5,6 +5,7 @@ import { PrismaClientKnownRequestError } from "@prisma/client/runtime/library";
 import prisma from "../lib/prisma";
 import { JWT_SECRET } from "../lib/env";
 import { logActivity, logRequestActivity } from "../lib/activityLog";
+import { canSeePrivateData, toPublicUser } from "../lib/privacy";
 
 // POST /api/auth/logout — the token itself is stateless; this only records it
 export const signOut = async (req: Request, res: Response): Promise<void> => {
@@ -12,8 +13,12 @@ export const signOut = async (req: Request, res: Response): Promise<void> => {
   res.status(200).json({ success: true });
 };
 
+// Sends a 400 with a message the sign-up form shows to the user
+const badRequest = (res: Response, message: string) => {
+  res.status(400).json({ success: false, error: message, message });
+};
+
 export const signUp = async (req: Request, res: Response): Promise<void> => {
-  console.log("Received signup request with body:", req.body);
   try {
     const {
       fullName,
@@ -25,8 +30,6 @@ export const signUp = async (req: Request, res: Response): Promise<void> => {
       contact,
       dateofBirth,
       gender,
-      role,
-      status,
       district,
       profilePictureName,
       weight,
@@ -34,95 +37,143 @@ export const signUp = async (req: Request, res: Response): Promise<void> => {
       idType,
       idFrontImage,
       idBackImage,
-    } = req.body;
+    } = req.body ?? {};
+
+    // Validate before touching the database so users get a clear message
+    const missing = Object.entries({
+      email,
+      password,
+      firstName,
+      lastName,
+      contact,
+      dateofBirth,
+      gender,
+      district,
+      idType,
+    })
+      .filter(([, value]) => value === undefined || value === null || String(value).trim() === "")
+      .map(([field]) => field);
+    if (missing.length) {
+      badRequest(res, `Missing required fields: ${missing.join(", ")}`);
+      return;
+    }
+
+    const birthDate = new Date(dateofBirth);
+    if (Number.isNaN(birthDate.getTime())) {
+      badRequest(res, "Invalid date of birth");
+      return;
+    }
+    const weightKg = parseInt(weight, 10);
+    const heightCm = parseInt(height, 10);
+    if (!Number.isFinite(weightKg) || !Number.isFinite(heightCm)) {
+      badRequest(res, "Please enter a valid height and weight");
+      return;
+    }
 
     const existingUser = await prisma.user.findUnique({ where: { email } });
     if (existingUser) {
-      res.status(400).json({ error: "User already exists" });
+      badRequest(res, "An account with this email already exists");
       return;
     }
 
     const hashedPassword = await bcrypt.hash(password, 10);
 
-    const newUser = await prisma.user.create({
-      data: {
-        fullName,
-        email,
-        password: hashedPassword,
-        firstName,
-        lastName,
-        nicNum : nicNum ? nicNum : undefined,
-        contact,
-        dateofBirth: new Date(dateofBirth),
-        gender,
-        role,
-        status,
-        district,
-        profilePictureName,
-      },
-    });
-    console.log("Creating player profile for user:", newUser.id);
-    logActivity(
-      newUser.id,
-      newUser.role,
-      `New ${newUser.role} account registered (${newUser.email})`
-    );
-    if (role === "player") {
-      console.log("2");
-      await prisma.player.create({
+    // User + player profile are created together: if either fails, neither
+    // is saved (no half-created accounts that block re-registering).
+    const newUser = await prisma.$transaction(async (tx) => {
+      const user = await tx.user.create({
         data: {
-          userId: newUser.id,
-          weight: parseInt(weight),
-          height: parseInt(height),
+          fullName: fullName || `${firstName} ${lastName}`.trim(),
+          email,
+          password: hashedPassword,
+          firstName,
+          lastName,
+          nicNum: nicNum ? String(nicNum).trim() : null,
+          contact,
+          dateofBirth: birthDate,
+          gender,
+          // Public sign-up always creates a pending player; admins are
+          // created only by other admins (POST /api/admin/signupadmin).
+          role: "player",
+          status: "pending",
+          district,
+          // Optional: omit to use the default picture (null is not allowed)
+          profilePictureName: profilePictureName || undefined,
+        },
+      });
+      await tx.player.create({
+        data: {
+          userId: user.id,
+          weight: weightKg,
+          height: heightCm,
           idType,
           idFrontImage,
           idBackImage,
         },
       });
-      res.status(201).json({ success: "Player registered successfully" });
-    }
-    console.log("3");
+      return user;
+    });
 
-    res.status(201).json({ success: "User registered successfully" });
+    logActivity(
+      newUser.id,
+      newUser.role,
+      `New ${newUser.role} account registered (${newUser.email})`
+    );
+    res.status(201).json({ success: true, message: "Player registered successfully" });
   } catch (error) {
+    // Unique NIC / email already used by another account
+    if (error instanceof PrismaClientKnownRequestError && error.code === "P2002") {
+      const target = String((error.meta as { target?: unknown })?.target ?? "");
+      badRequest(
+        res,
+        target.includes("nicNum")
+          ? "This NIC number is already registered"
+          : "An account with these details already exists"
+      );
+      return;
+    }
+    console.error("Signup error:", error);
     res.status(500).json({
+      success: false,
       error: "Signup failed",
-      details: error instanceof Error ? error.message : error,
+      message: "Registration failed. Please try again.",
     });
   }
 };
 export const signIn = async (req: Request, res: Response): Promise<void> => {
   try {
-    const { username, password } = req.body;
-    // Declare email in outer scope
-    let email;
-    let user;
-    let nicNum;
-
-    if (username.slice(-4) === ".com") {
-      email = username;
-      console.log("Valid email format. Email is:", email);
-      user = await prisma.user.findUnique({ where: { email } }); // assign to outer 'user'
-    } else {
-      console.log("Invalid email format: must end with .com, may be NIC");
-      nicNum = username;
-      user = await prisma.user.findFirst({ where: { nicNum } }); // assign to outer 'user'
+    const { username: rawUsername, password } = req.body ?? {};
+    if (!rawUsername || !password) {
+      res.status(400).json({ error: "Username and password are required", message: "Please enter your email/NIC and password" });
+      return;
     }
+    const username = String(rawUsername).trim();
+
+    // Email (ends with .com) or NIC number
+    const user =
+      username.toLowerCase().endsWith(".com")
+        ? await prisma.user.findUnique({ where: { email: username } })
+        : await prisma.user.findFirst({ where: { nicNum: username } });
+
+    // Same response for "no such account" and "wrong password" so the
+    // sign-in form can't be used to find out who is registered.
+    const invalid = () =>
+      res.status(401).json({ error: "Invalid credentials", message: "Incorrect email/NIC or password" });
 
     if (!user) {
       logActivity(
         null,
         "guest",
-        `Failed login: no account for "${String(username).slice(0, 100)}"`
+        `Failed login: no account for "${username.slice(0, 100)}"`
       );
-      res.status(404).json({ error: "User not found" });
+      invalid();
       return;
     }
 
-    const isMatch = await bcrypt.compare(password, user.password);
+    const isMatch = await bcrypt.compare(String(password), user.password);
     if (!isMatch) {
       logActivity(user.id, user.role, "Failed login: wrong password");
-      res.status(401).json({ error: "Invalid credentials" });
+      invalid();
       return;
     }
 
@@ -142,10 +193,8 @@ export const signIn = async (req: Request, res: Response): Promise<void> => {
       },
     });
   } catch (error) {
-    res.status(500).json({
-      error: "Signin failed",
-      details: error instanceof Error ? error.message : error,
-    });
+    console.error("Signin error:", error);
+    res.status(500).json({ error: "Signin failed", message: "Sign-in failed. Please try again." });
   }
 };
 export const getUser = async (req: Request, res: Response): Promise<void> => {
@@ -182,7 +231,7 @@ export const getUser = async (req: Request, res: Response): Promise<void> => {
   } catch (error) {
     res.status(500).json({
       error: "Failed to retrieve user",
-      details: error instanceof Error ? error.message : error,
+      message: "Failed to retrieve user",
     });
   }
 };
@@ -198,8 +247,9 @@ export const getPlayerDetails = async (
       return;
     }
 
+    // Short numbers are user ids; long all-digit values are new-format NICs
     const asNumber = Number(userid);
-    const isNumericId = Number.isFinite(asNumber);
+    const isNumericId = /^\d{1,9}$/.test(userid) && Number.isFinite(asNumber);
 
     // Fetch user + player
     const user = isNumericId
@@ -275,13 +325,11 @@ export const getPlayerDetails = async (
         : null,
     };
 
-    res.json(response);
+    // Full record only for the player themselves or an admin
+    res.json(canSeePrivateData(req.user, user.id) ? response : toPublicUser(response));
   } catch (error) {
     console.error("Error fetching user details:", error);
-    res.status(500).json({
-      error: "Failed to retrieve user details",
-      details: error instanceof Error ? error.message : error,
-    });
+    res.status(500).json({ error: "Failed to retrieve user details", message: "Failed to retrieve user details" });
   }
 };
 

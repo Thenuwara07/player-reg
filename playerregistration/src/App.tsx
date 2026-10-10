@@ -15,7 +15,6 @@ import UserDashboard from "./pages/Profile";
 import AdminDashboard from "./pages/AdminDashboard";
 import NotFound from "./pages/NotFound";
 import Players from "./pages/Players";
-import Test from "./pages/Test";
 import Guestplayer from "./pages/Guestplayer";
 import PlayerAdminView from "./pages/PlayerAdminView";
 import AllPosts from "@/pages/AllPosts";
@@ -34,6 +33,10 @@ const DeniedRedirect = ({ to, message }: { to: string; message: string }) => {
   }, [message]);
   return <Navigate to={to} replace />;
 };
+
+// Any logged-in user (player or admin); otherwise go to sign-in
+const RequireLogin = ({ children }: { children: React.ReactNode }) =>
+  sessionStorage.getItem("userData") ? <>{children}</> : <Navigate to="/signin" replace />;
 
 const ProtectedRoute = ({
   children,
@@ -103,8 +106,7 @@ const AppContent = () => {
           {/* <Route path="/signin" element={<SignIn />} />
           <Route path="/signup" element={<SignUp />} /> */}
           <Route path="/players" element={<Players />} />
-          <Route path="/dashboard" element={<UserDashboard />} />
-          <Route path="/test" element={<Test />} />
+          <Route path="/dashboard" element={<RequireLogin><UserDashboard /></RequireLogin>} />
           <Route path="/player" element={<Guestplayer />} />
           <Route path="/" element={<Navigate to="/allPosts" replace />} />
           

@@ -361,9 +361,11 @@ const AdminDashboard = () => {
       !newAdminData.lastName ||
       !newAdminData.contactNumber ||
       !newAdminData.district ||
+      !newAdminData.dateOfbirth ||
+      !newAdminData.gender ||
       !newAdminData.password
     ) {
-      toast.error("Please fill in all fields");
+      toast.error("Please fill in all fields, including date of birth and gender");
       return;
     }
     if (newAdminData.password !== newAdminData.confirmPassword) {
@@ -541,9 +543,9 @@ const AdminDashboard = () => {
     playerId?: string,
     slbfId?: string,
     type?: string,
-    newAssId: number,
-    newAss: string,
-    newAssCode: string,
+    newAssId?: number,
+    newAss?: string,
+    newAssCode?: string,
     newClubId?: number,
     newClub?: string,
     newClubCode?: string,
@@ -625,7 +627,7 @@ const AdminDashboard = () => {
 
   return (
     <div className="min-h-screen sports-gradient">
-      <div className="container mx-auto px-4 py-8">
+      <div className="container mx-auto px-4 pt-8 pb-24 sm:pb-8">
         {/* IMPORTANT: No TabsList; we still use Tabs to reuse your existing TabsContent blocks */}
         <Tabs value={currentTab} className="space-y-6">
           {/* ---------- OVERVIEW (landing) ---------- */}
@@ -740,23 +742,23 @@ const AdminDashboard = () => {
               {/* Activity logs: sits just left of the settings button */}
               <Link
                 to="/logs"
-                className="fixed bottom-8 right-28 z-50"
+                className="fixed bottom-4 right-[4.5rem] z-50 sm:bottom-8 sm:right-28"
                 title="Activity Logs"
                 aria-label="Activity Logs"
               >
-                <Card className="w-16 h-16 rounded-2xl flex items-center justify-center shadow-2xl border-2 hover:border-primary hover:scale-105 transition-all duration-300 group bg-white">
-                  <ScrollText className="w-8 h-8 text-gray-600 group-hover:scale-110 transition-transform duration-300" />
+                <Card className="w-12 h-12 sm:w-16 sm:h-16 rounded-2xl flex items-center justify-center shadow-2xl border-2 hover:border-primary hover:scale-105 transition-all duration-300 group bg-white">
+                  <ScrollText className="w-6 h-6 sm:w-8 sm:h-8 text-gray-600 group-hover:scale-110 transition-transform duration-300" />
                 </Card>
               </Link>
               <Link
                 to="/settings"
-                className="fixed bottom-8 right-8 z-50"
+                className="fixed bottom-4 right-4 z-50 sm:bottom-8 sm:right-8"
                 title="Settings"
                 aria-label="Settings"
               >
-                <Card className="w-16 h-16 rounded-2xl flex items-center justify-center shadow-2xl border-2 hover:border-primary hover:scale-105 transition-all duration-300 group bg-white">
+                <Card className="w-12 h-12 sm:w-16 sm:h-16 rounded-2xl flex items-center justify-center shadow-2xl border-2 hover:border-primary hover:scale-105 transition-all duration-300 group bg-white">
                   {/* The Wheel Icon */}
-                  <Settings className="w-8 h-8 text-gray-600 group-hover:rotate-90 transition-transform duration-500" />
+                  <Settings className="w-6 h-6 sm:w-8 sm:h-8 text-gray-600 group-hover:rotate-90 transition-transform duration-500" />
                 </Card>
               </Link>
             </div>
@@ -1381,7 +1383,7 @@ const AdminDashboard = () => {
                     <img
                       src={toDisplayImageUrl(selectedUser?.player?.idFrontImage)}
                       alt="ID Front"
-                      className="w-full h-52 object-cover rounded-lg border cursor-pointer hover:opacity-90 transition"
+                      className="w-full h-52 object-cover object-top rounded-lg border cursor-pointer hover:opacity-90 transition"
                       onClick={() =>
                         setExpandedView(
                           expandedView === "front" ? null : "front",
@@ -1430,7 +1432,7 @@ const AdminDashboard = () => {
                     <img
                       src={toDisplayImageUrl(selectedUser?.player?.idBackImage)}
                       alt="ID Back"
-                      className="w-full h-52 object-cover rounded-lg border cursor-pointer hover:opacity-90 transition"
+                      className="w-full h-52 object-cover object-top rounded-lg border cursor-pointer hover:opacity-90 transition"
                       onClick={() =>
                         setExpandedView(expandedView === "back" ? null : "back")
                       }
@@ -1576,7 +1578,7 @@ const AdminDashboard = () => {
                     <img
                       src={toDisplayImageUrl(regUser?.slipImage)}
                       alt="ID Back"
-                      className="w-full h-52 object-cover rounded-lg border cursor-pointer hover:opacity-90 transition"
+                      className="w-full h-52 object-cover object-top rounded-lg border cursor-pointer hover:opacity-90 transition"
                       onClick={() => setIsExpanded(!isExpanded)}
                     />
                     <p className="text-sm text-gray-500 mt-2">
@@ -1707,7 +1709,7 @@ const AdminDashboard = () => {
                   <img
                     src={toDisplayImageUrl(clubchangeuser?.oldImage)}
                     alt="Resignation Letter"
-                    className="w-full h-[300px] object-cover rounded-lg border"
+                    className="w-full h-[300px] object-cover object-top rounded-lg border"
                   />
                 </div>
               </div>
@@ -1738,7 +1740,7 @@ const AdminDashboard = () => {
                 <img
                   src={toDisplayImageUrl(clubchangeuser?.newImage)}
                   alt="Offer Letter"
-                  className="w-full h-[300px] object-cover rounded-lg border"
+                  className="w-full h-[300px] object-cover object-top rounded-lg border"
                 />
               </div>
             </div>

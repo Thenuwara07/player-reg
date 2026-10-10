@@ -1050,7 +1050,7 @@ const SignUp = () => {
                           />
                         ) : (
                           <div className="w-16 h-16 sm:w-20 sm:h-20 rounded-full bg-gray-200 flex items-center justify-center">
-                            <span className="text-gray-500 text-xs sm:text-sm">
+                            <span className="text-gray-700 text-xs sm:text-sm">
                               No image
                             </span>
                           </div>
@@ -1080,8 +1080,8 @@ const SignUp = () => {
                             {previews.profile ? "Change Image" : "Upload Image"}
                           </Button>
                         </Label>
-                        <p className="text-xs text-gray-500 mt-1">
-                          Recommended size: 200x200 pixels, Max 2MB
+                        <p className="text-xs text-gray-600 mt-1">
+                          Square photo recommended. PNG or JPEG, large photos are resized automatically
                         </p>
                       </div>
                     </div>
@@ -1135,7 +1135,7 @@ const SignUp = () => {
                               handleInputChange("gender", value)
                             }
                           >
-                            <SelectTrigger>
+                            <SelectTrigger aria-label="Gender">
                               <SelectValue placeholder="Select gender" />
                             </SelectTrigger>
                             <SelectContent>
@@ -1168,7 +1168,7 @@ const SignUp = () => {
                             handleInputChange("district", value)
                           }
                         >
-                          <SelectTrigger>
+                          <SelectTrigger aria-label="District">
                             <SelectValue placeholder="Select district" />
                           </SelectTrigger>
                           <SelectContent>
@@ -1343,7 +1343,7 @@ const SignUp = () => {
                       handleInputChange("idType", value)
                     }
                   >
-                    <SelectTrigger>
+                    <SelectTrigger aria-label="ID document type">
                       <SelectValue placeholder="Select document type" />
                     </SelectTrigger>
                     <SelectContent>

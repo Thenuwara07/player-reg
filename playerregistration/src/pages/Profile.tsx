@@ -62,7 +62,7 @@ import {
 import { RegRequest } from "@/types/index";
 import SearchableFreeTextClubInput from "../components/models/SearchableFreeTextClubInput";
 import { set } from "date-fns";
-import { validateClubChange } from "../validation/clubChangeValidator";
+import { validateClubChange, type ClubChangeData } from "../validation/clubChangeValidator";
 import ConfirmProfileModal, {
   ProfileData,
 } from "../components/models/ConfirmProfileModal";
@@ -341,7 +341,8 @@ const Profile = () => {
   const status = playerInfo?.status;
 
   const [isEditing, setIsEditing] = useState(false);
-  const [editData, setEditData] = useState({
+  // Current profile values, used to pre-fill the form when editing starts
+  const defaultEditData = () => ({
     userId: currentUser?.id,
     firstName: currentUser?.firstName,
     lastName: currentUser?.lastName,
@@ -350,6 +351,7 @@ const Profile = () => {
     weight: currentUser?.player?.weight,
     height: currentUser?.player?.height,
   });
+  const [editData, setEditData] = useState(defaultEditData);
 
   const [clubChangeData, setClubChangeData] = useState({
     type: "",
@@ -640,7 +642,7 @@ const Profile = () => {
   };
 
   const handleClubChangeRequest = async () => {
-    const error = validateClubChange(currentUser, clubChangeData);
+    const error = validateClubChange(currentUser, clubChangeData as ClubChangeData);
     if (error) {
       toast.error(error);
       return;
@@ -689,7 +691,12 @@ const Profile = () => {
         toast.error("Failed to submit club change request.");
       }
     } catch (error) {
-      toast.error("Failed to submit club change request.");
+      // e.g. "You already have a pending open club change request…"
+      toast.error(
+        error instanceof Error && error.message && error.message !== "Request failed"
+          ? error.message
+          : "Failed to submit club change request."
+      );
     }
   };
 
@@ -718,12 +725,14 @@ const Profile = () => {
     return null;
   };
 
-  // derive status + cooldown (Fixed Typo on "ChangeDate")
+  // derive status + cooldown. NOTE: the database columns are spelled
+  // "...ClubChagngeDate" (typo in the schema) — read that name, not "ChangeDate",
+  // or the cooldown never applies.
   const openchangeDate = parseMaybeDate(
-    currentUser?.player?.openClubChangeDate
+    currentUser?.player?.openClubChagngeDate ?? currentUser?.player?.openClubChangeDate
   );
   const closechangeDate = parseMaybeDate(
-    currentUser?.player?.closeClubChangeDate
+    currentUser?.player?.closeClubChagngeDate ?? currentUser?.player?.closeClubChangeDate
   );
 
   // Added optional chaining and fallback to prevent null reference crash
@@ -758,21 +767,29 @@ const Profile = () => {
                       Your personal details and registration info
                     </CardDescription>
                   </div>
-                  {/* <Button
-                    variant={isEditing ? "default" : "outline"}
-                    onClick={() =>
-                      isEditing ? handleSaveProfile() : setIsEditing(true)
-                    }
-                  >
-                    {isEditing ? "Save Changes" : "Edit Profile"}
-                  </Button> */}
-                  {/* <button
-                    type="button"
-                    onClick={handleSaveProfile}
-                    style={{ marginLeft: 8 }}
-                  >
-                    Save
-                  </button> */}
+                  <div className="flex gap-2">
+                    {isEditing && (
+                      <Button
+                        variant="outline"
+                        onClick={() => {
+                          setEditData(defaultEditData());
+                          setIsEditing(false);
+                        }}
+                      >
+                        Cancel
+                      </Button>
+                    )}
+                    <Button
+                      variant={isEditing ? "default" : "outline"}
+                      onClick={() => {
+                        if (isEditing) return handleSaveProfile();
+                        setEditData(defaultEditData());
+                        setIsEditing(true);
+                      }}
+                    >
+                      {isEditing ? "Save Changes" : "Edit Profile"}
+                    </Button>
+                  </div>
                 </div>
               </CardHeader>
               <CardContent>

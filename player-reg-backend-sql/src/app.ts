@@ -1,6 +1,8 @@
 import express from "express";
 import cors from "cors";
 import dotenv from "dotenv";
+import helmet from "helmet";
+import compression from "compression";
 
 import authRoutes from "./routes/authRoutes";
 import adminRoutes from "./routes/adminRoutes";
@@ -11,6 +13,13 @@ import postRoutes from "./routes/postRoutes";
 dotenv.config();
 
 const app = express();
+
+// ✅ Security headers (also removes "X-Powered-By: Express").
+// The API is called cross-origin by the frontend, so allow cross-origin reads.
+app.use(helmet({ crossOriginResourcePolicy: { policy: "cross-origin" } }));
+
+// ✅ Gzip responses (the full players list is ~1 MB per 1,000 players)
+app.use(compression());
 
 // ✅ Allowed origins
 const allowedOrigins = [
@@ -35,8 +44,9 @@ app.use(
       if (allowedOrigins.includes(origin)) {
         return callback(null, true);
       } else {
-        console.error("❌ CORS blocked:", origin);
-        return callback(new Error("Not allowed by CORS"));
+        console.warn("❌ CORS blocked:", origin);
+        // 403 (not 500): a refused origin is not a server error
+        return callback(Object.assign(new Error("Not allowed by CORS"), { status: 403 }));
       }
     },
     methods: ["GET", "POST", "PUT", "DELETE", "PATCH", "OPTIONS"],
@@ -78,11 +88,14 @@ app.use(
     // eslint-disable-next-line @typescript-eslint/no-unused-vars
     next: express.NextFunction
   ) => {
-    console.error("Unhandled error:", err);
+    const status = err?.status || err?.statusCode || 500;
+    if (status >= 500) console.error("Unhandled error:", err);
     if (res.headersSent) return;
-    res.status(err?.status || err?.statusCode || 500).json({
+    res.status(status).json({
       success: false,
-      message: err?.message || "Internal server error",
+      // Client errors (bad JSON, CORS) explain themselves; server errors
+      // stay generic so internals never reach the browser
+      message: status < 500 ? err?.message || "Bad request" : "Internal server error",
     });
   }
 );

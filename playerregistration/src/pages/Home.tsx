@@ -187,6 +187,7 @@ import PostCard from "@/components/Common/PostCard";
 import { GetdeafaultDetails, GetPosts } from "@/api/postApi";
 import type { DefaultDetails, Post } from "@/types/authTypes";
 import { useGlobalSettings } from "../contexts/GlobalSettingsContext";
+import { optimizedImageUrl } from "@/utils/fileValidation";
 
 // const IMG_URL =
 //   (import.meta.env.VITE_IMG_URL as string);
@@ -197,7 +198,7 @@ const resolveImg = (name?: string) => {
   if (!name) return "";
 
   // Cloudinary or any full URL stored in DB
-  if (/^https?:\/\//i.test(name)) return name;
+  if (/^https?:\/\//i.test(name)) return optimizedImageUrl(name, 1200);
 
   // old local paths are not supported anymore in production
   return "";
@@ -272,7 +273,7 @@ const Home: React.FC = () => {
       <div
         className="hero-gradient text-white py-12 sm:py-16 lg:py-20 bg-cover bg-center bg-no-repeat relative"
         style={{
-          backgroundImage: `linear-gradient(rgba(0, 0, 0, 0.5), rgba(0, 0, 0, 0.5)), url(${details?.imageName || "your-fallback-image.jpg"})`,
+          backgroundImage: `linear-gradient(rgba(0, 0, 0, 0.5), rgba(0, 0, 0, 0.5)), url(${optimizedImageUrl(details?.imageName, 1920) || "your-fallback-image.jpg"})`,
         }}
       >
         <div className="container mx-auto px-4 sm:px-6 lg:px-8 text-center relative z-10">

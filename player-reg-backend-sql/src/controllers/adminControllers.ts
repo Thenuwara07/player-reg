@@ -3,6 +3,13 @@ import { PrismaClientKnownRequestError } from "@prisma/client/runtime/library";
 import { Prisma } from "@prisma/client";
 import bcrypt from "bcryptjs";
 import prisma from "../lib/prisma";
+import { toPublicUser } from "../lib/privacy";
+
+// List endpoints may only be sorted by these columns (anything else falls
+// back to name) so ?sortBy=password or a typo can't reach the database.
+const SORTABLE_FIELDS = new Set(["id", "name", "code", "status", "createdAt", "updatedAt"]);
+const safeSortField = (sortBy: unknown) =>
+  typeof sortBy === "string" && SORTABLE_FIELDS.has(sortBy) ? sortBy : "name";
 import { logRequestActivity, userDisplayName } from "../lib/activityLog";
 
 // --- Activity log descriptions for the dashboard's generic field updates ---
@@ -154,7 +161,7 @@ export const getPendingPlayers = async (
         success: false,
         error: "Internal server error",
         message:
-          error instanceof Error ? error.message : "Unknown error occurred",
+          "Unknown error occurred",
       });
     }
   }
@@ -322,7 +329,7 @@ export const getPendingReg = async (
         success: false,
         error: "Internal server error",
         message:
-          error instanceof Error ? error.message : "Unknown error occurred",
+          "Unknown error occurred",
       });
     }
   }
@@ -386,7 +393,7 @@ export const getClubchangePendingReq = async (
         success: false,
         error: "Internal server error",
         message:
-          error instanceof Error ? error.message : "Unknown error occurred",
+          "Unknown error occurred",
       });
     }
   }
@@ -454,7 +461,7 @@ export const getAllCloseclubs = async (
     // Fetch close clubs from database, default: order by name A–Z
     const clubs = await prisma.closeclubs.findMany({
       orderBy: {
-        [sortBy as string]: validatedSortOrder,
+        [safeSortField(sortBy)]: validatedSortOrder,
       },
     });
 
@@ -481,7 +488,7 @@ export const getAllCloseclubs = async (
         success: false,
         error: "Internal server error",
         message:
-          error instanceof Error ? error.message : "Unknown error occurred",
+          "Unknown error occurred",
       });
     }
   }
@@ -504,7 +511,7 @@ export const getAllOpenclubs = async (
     // Fetch close clubs from database, default: order by name A–Z
     const clubs = await prisma.openclubs.findMany({
       orderBy: {
-        [sortBy as string]: validatedSortOrder,
+        [safeSortField(sortBy)]: validatedSortOrder,
       },
     });
 
@@ -531,7 +538,7 @@ export const getAllOpenclubs = async (
         success: false,
         error: "Internal server error",
         message:
-          error instanceof Error ? error.message : "Unknown error occurred",
+          "Unknown error occurred",
       });
     }
   }
@@ -554,7 +561,7 @@ export const getAllMercclubs = async (
     // Fetch close clubs from database, default: order by name A–Z
     const clubs = await prisma.mercantileclubs.findMany({
       orderBy: {
-        [sortBy as string]: validatedSortOrder,
+        [safeSortField(sortBy)]: validatedSortOrder,
       },
     });
 
@@ -581,7 +588,7 @@ export const getAllMercclubs = async (
         success: false,
         error: "Internal server error",
         message:
-          error instanceof Error ? error.message : "Unknown error occurred",
+          "Unknown error occurred",
       });
     }
   }
@@ -604,7 +611,7 @@ export const getAllSchools = async (
     // Fetch close clubs from database, default: order by name A–Z
     const clubs = await prisma.schools.findMany({
       orderBy: {
-        [sortBy as string]: validatedSortOrder,
+        [safeSortField(sortBy)]: validatedSortOrder,
       },
     });
 
@@ -631,7 +638,7 @@ export const getAllSchools = async (
         success: false,
         error: "Internal server error",
         message:
-          error instanceof Error ? error.message : "Unknown error occurred",
+          "Unknown error occurred",
       });
     }
   }
@@ -654,7 +661,7 @@ export const getAllUniversities = async (
     // Fetch close clubs from database, default: order by name A–Z
     const clubs = await prisma.universities.findMany({
       orderBy: {
-        [sortBy as string]: validatedSortOrder,
+        [safeSortField(sortBy)]: validatedSortOrder,
       },
     });
 
@@ -681,7 +688,7 @@ export const getAllUniversities = async (
         success: false,
         error: "Internal server error",
         message:
-          error instanceof Error ? error.message : "Unknown error occurred",
+          "Unknown error occurred",
       });
     }
   }
@@ -704,7 +711,7 @@ export const getAllAssociations = async (
     // Fetch close clubs from database, default: order by name A–Z
     const clubs = await prisma.associations.findMany({
       orderBy: {
-        [sortBy as string]: validatedSortOrder,
+        [safeSortField(sortBy)]: validatedSortOrder,
       },
       include: {
         openclubs: {
@@ -736,7 +743,7 @@ export const getAllAssociations = async (
         success: false,
         error: "Internal server error",
         message:
-          error instanceof Error ? error.message : "Unknown error occurred",
+          "Unknown error occurred",
       });
     }
   }
@@ -783,7 +790,7 @@ export const getOpenClubsByAssociationId = async (
       res.status(500).json({
         success: false,
         error: "Internal server error",
-        message: (error as Error).message,
+        message: "Internal server error",
       });
     }
   }
@@ -855,7 +862,7 @@ export const getAssociationById = async (
       res.status(500).json({
         success: false,
         error: "Internal server error",
-        message: (error as Error).message,
+        message: "Internal server error",
       });
     }
   }
@@ -875,6 +882,10 @@ export const getClubById = async (
 
     if (!associationId || Number.isNaN(associationId)) {
       res.status(400).json({ success: false, error: "Invalid associationId" });
+      return;
+    }
+    if (!Number.isInteger(clubId) || clubId <= 0) {
+      res.status(400).json({ success: false, error: "Invalid clubId" });
       return;
     }
 
@@ -947,7 +958,7 @@ export const getClubById = async (
       res.status(500).json({
         success: false,
         error: "Internal server error",
-        message: (error as Error).message,
+        message: "Internal server error",
       });
     }
   }
@@ -1002,7 +1013,7 @@ export const getClubById = async (
 //       res.status(500).json({
 //         success: false,
 //         error: "Internal server error",
-//         message: (error as Error).message,
+//         message: "Internal server error",
 //       });
 //     }
 //   }
@@ -1011,7 +1022,6 @@ export const signUpAdmin = async (
   req: Request,
   res: Response
 ): Promise<void> => {
-  console.log("Received signup request with body:", req.body);
   try {
     const {
       fullName,
@@ -1024,11 +1034,25 @@ export const signUpAdmin = async (
       dateofBirth,
       gender,
       district,
-    } = req.body;
+    } = req.body ?? {};
+
+    // Validate first so the admin sees what is missing instead of a 500
+    const missing = Object.entries({ email, password, firstName, lastName, contact, dateofBirth, gender, district })
+      .filter(([, value]) => value === undefined || value === null || String(value).trim() === "")
+      .map(([field]) => field);
+    if (missing.length) {
+      res.status(400).json({ success: false, error: `Missing required fields: ${missing.join(", ")}`, message: `Missing required fields: ${missing.join(", ")}` });
+      return;
+    }
+    const birthDate = new Date(dateofBirth);
+    if (Number.isNaN(birthDate.getTime())) {
+      res.status(400).json({ success: false, error: "Invalid date of birth", message: "Invalid date of birth" });
+      return;
+    }
 
     const existingUser = await prisma.user.findUnique({ where: { email } });
     if (existingUser) {
-      res.status(400).json({ error: "User already exists" });
+      res.status(400).json({ success: false, error: "User already exists", message: "An account with this email already exists" });
       return;
     }
 
@@ -1037,31 +1061,33 @@ export const signUpAdmin = async (
     const newUser = await prisma.user.create({
       data: {
         email,
-        fullName,
+        fullName: fullName || `${firstName} ${lastName}`.trim(),
         password: hashedPassword,
         firstName,
         lastName,
-        nicNum,
+        // Blank NIC must be NULL: "" counts as a value for the unique index
+        nicNum: nicNum ? String(nicNum).trim() : null,
         contact,
-        dateofBirth: new Date(dateofBirth),
+        dateofBirth: birthDate,
         gender,
         role: "admin",
         status: "active",
         district,
       },
     });
-    console.log("Creating player profile for user:", newUser.id);
     logRequestActivity(
       req,
       `Created admin account for ${newUser.firstName} ${newUser.lastName} (${newUser.email})`
     );
 
-    res.status(201).json({ success: "User registered successfully" });
+    res.status(201).json({ success: true, message: "Admin account created" });
   } catch (error) {
-    res.status(500).json({
-      error: "Failed to create account.",
-      details: error instanceof Error ? error.message : error,
-    });
+    if (error instanceof PrismaClientKnownRequestError && error.code === "P2002") {
+      res.status(400).json({ success: false, error: "Duplicate NIC or email", message: "This NIC number or email is already registered" });
+      return;
+    }
+    console.error("Create admin error:", error);
+    res.status(500).json({ success: false, error: "Failed to create account.", message: "Failed to create account. Please try again." });
   }
 };
 export const getAlladmin = async (
@@ -1118,7 +1144,7 @@ export const getAlladmin = async (
     const admins = await prisma.user.findMany({
       where: { role: "admin" }, // ensure this matches your Role enum/string values
       orderBy,
-      // select: { id: true, firstName: true, lastName: true, email: true, role: true, createdAt: true } // (optional) avoid exposing sensitive fields
+      omit: { password: true }, // never send password hashes
     });
 
     res.status(200).json({
@@ -1139,7 +1165,7 @@ export const getAlladmin = async (
         success: false,
         error: "Database error",
         code: error.code,
-        message: error.message,
+        message: "Request failed",
       });
       return;
     }
@@ -1149,7 +1175,7 @@ export const getAlladmin = async (
       res.status(400).json({
         success: false,
         error: "Validation error",
-        message: error.message,
+        message: "Request failed",
       });
       return;
     }
@@ -1158,7 +1184,7 @@ export const getAlladmin = async (
       success: false,
       error: "Internal server error",
       message:
-        error instanceof Error ? error.message : "Unknown error occurred",
+        "Unknown error occurred",
     });
   }
 };
@@ -1410,9 +1436,12 @@ export const getAllPlayers = async (
       };
     });
 
+    // Public callers (Players page) don't get contact details, NIC,
+    // birth date (an `age` is added instead) or ID-document images
+    const isAdmin = req.user?.role === "admin";
     res.status(200).json({
       success: true,
-      data: players,
+      data: isAdmin ? players : players.map((p) => toPublicUser(p)),
       meta: {
         count: players.length,
         sortBy,
@@ -1427,7 +1456,7 @@ export const getAllPlayers = async (
         success: false,
         error: "Database error",
         code: error.code,
-        message: error.message,
+        message: "Request failed",
       });
       return;
     }
@@ -1436,7 +1465,7 @@ export const getAllPlayers = async (
       res.status(400).json({
         success: false,
         error: "Validation error",
-        message: error.message,
+        message: "Request failed",
       });
       return;
     }
@@ -1445,7 +1474,7 @@ export const getAllPlayers = async (
       success: false,
       error: "Internal server error",
       message:
-        error instanceof Error ? error.message : "Unknown error occurred",
+        "Unknown error occurred",
     });
   }
 };

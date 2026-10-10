@@ -51,7 +51,12 @@ const SignIn = () => {
         );
       }
     } catch (error) {
-      toast.error("An error occurred. Please try again.");
+      // e.g. "Incorrect email/NIC or password", "Too many attempts…"
+      toast.error(
+        error instanceof Error && error.message
+          ? error.message
+          : "An error occurred. Please try again."
+      );
     } finally {
       setIsLoading(false);
     }

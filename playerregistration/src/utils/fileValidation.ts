@@ -53,6 +53,17 @@ export const isPdfUrl = (url?: string | null) =>
   !!url && /\.pdf(\?|#|$)/i.test(url);
 
 /**
+ * Smaller, faster version of a Cloudinary image: best format for the browser
+ * (WebP/AVIF), automatic quality, and at most `width` pixels wide.
+ * Non-Cloudinary URLs and PDFs are returned unchanged.
+ */
+export const optimizedImageUrl = (url?: string | null, width = 1600): string => {
+  if (!url) return "";
+  if (!url.includes("res.cloudinary.com") || !url.includes("/image/upload/") || isPdfUrl(url)) return url;
+  return url.replace("/image/upload/", `/image/upload/f_auto,q_auto,w_${width},c_limit/`);
+};
+
+/**
  * Image URL for displaying an uploaded file. For a Cloudinary PDF this is
  * a JPG render of its first page; other URLs are returned unchanged.
  */

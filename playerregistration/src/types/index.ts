@@ -27,6 +27,8 @@ import { stringify } from "querystring";
 export interface User {
   id: string;
   firstname: string;
+  firstName?: string; // the sign-in response uses this spelling
+  name?: string;
   role: "superadmin" | "admin" | "player";
   status: "confirmed" | "banned" | "pending";
 }

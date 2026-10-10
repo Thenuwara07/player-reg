@@ -100,7 +100,7 @@ const Profile: React.FC = () => {
         return;
       }
 
-      const playerData: UserShape = await playerDetails(numericId);
+      const playerData: Awaited<ReturnType<typeof playerDetails>> = await playerDetails(numericId);
       setPlayerInfo(playerData);
 
       await getAssClubdetails(

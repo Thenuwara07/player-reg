@@ -37,6 +37,24 @@ export const authenticateToken = (
   }
 };
 
+// Reads the token when one is sent, but never rejects the request.
+// Lets public endpoints return more data to admins / the owner.
+export const optionalAuth = (
+  req: Request,
+  _res: Response,
+  next: NextFunction
+) => {
+  const authHeader = req.headers.authorization;
+  if (authHeader?.startsWith("Bearer ")) {
+    try {
+      req.user = jwt.verify(authHeader.split(" ")[1], JWT_SECRET);
+    } catch {
+      // invalid/expired token: treat as anonymous
+    }
+  }
+  next();
+};
+
 export const authorizeRoles = (...allowedRoles: string[]) => {
   return (req: Request, res: Response, next: NextFunction) => {
     const userRole = req.user?.role;

@@ -33,10 +33,12 @@ export function validateClubChange(
   const hasOpenMembership = !!currentUser?.player?.openAssId;
   const hasCloseMembership = !!currentUser?.player?.closeAssId;
 
-  const isArmy = clubChangeData.newAss === "SL Army";
-  const isNavy = clubChangeData.newAss === "SL Navy";
-  const isAirForce = clubChangeData.newAss === "SL Air Force";
-  const isPolice = clubChangeData.newAss === "SL Police";
+  // Only these close associations have clubs to pick (schools, universities,
+  // mercantile: ids 4/5/6) — the same rule the club change form uses to show
+  // the "New Close Club" field. All other close associations have no club.
+  const closeAssNeedsClub =
+    ["SL Schools", "SL Universities", "Mercantiles"].includes(clubChangeData.newAss ?? "") ||
+    [4, 5, 6].includes(Number(clubChangeData.newAssId));
 
   // Case 1: User is in an open club and is changing an "open" club
 
@@ -74,7 +76,7 @@ export function validateClubChange(
     if (!clubChangeData.newAssId) {
       return "Please select a new close association";
     }
-    if (!isArmy && !isNavy && !isAirForce && !isPolice) {
+    if (closeAssNeedsClub) {
       if (!clubChangeData.newClubId) {
         return "Request failed! Select a new close club";
       }

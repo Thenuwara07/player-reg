@@ -127,7 +127,11 @@ const Players: React.FC = () => {
 
   const playersWithAge = useMemo(() => {
     if (!players) return [];
-    return players.map((p) => ({ ...p, age: calculateAge(p.dateofBirth) }));
+    // Public visitors don't receive the birth date; the server sends `age` instead
+    return players.map((p) => ({
+      ...p,
+      age: p.dateofBirth ? calculateAge(p.dateofBirth) : ((p as { age?: number }).age ?? 0),
+    }));
   }, [players]);
 
   // ---- options for selects ----
@@ -392,7 +396,7 @@ const Players: React.FC = () => {
                     value={districtFilter}
                     onValueChange={setDistrictFilter}
                   >
-                    <SelectTrigger>
+                    <SelectTrigger aria-label="Filter by district">
                       <SelectValue placeholder="District" />
                     </SelectTrigger>
                     <SelectContent>
@@ -407,7 +411,7 @@ const Players: React.FC = () => {
 
                   {/* Fuzzy Club text (any name/code) */}
                   {/* <Select value={clubFilter} onValueChange={setClubFilter}>
-                    <SelectTrigger>
+                    <SelectTrigger aria-label="Filter by club">
                       <SelectValue placeholder="Club (name/code contains…)" />
                     </SelectTrigger>
                     <SelectContent>
@@ -451,7 +455,7 @@ const Players: React.FC = () => {
                     value={openAssocFilter}
                     onValueChange={setOpenAssocFilter}
                   >
-                    <SelectTrigger>
+                    <SelectTrigger aria-label="Filter by open association">
                       <SelectValue placeholder="Open Association (code)" />
                     </SelectTrigger>
                     <SelectContent>
@@ -468,7 +472,7 @@ const Players: React.FC = () => {
                     value={closeAssocFilter}
                     onValueChange={setCloseAssocFilter}
                   >
-                    <SelectTrigger>
+                    <SelectTrigger aria-label="Filter by close association">
                       <SelectValue placeholder="Close Association (code)" />
                     </SelectTrigger>
                     <SelectContent>
@@ -487,7 +491,7 @@ const Players: React.FC = () => {
                     value={openClubFilterExact}
                     onValueChange={setOpenClubFilterExact}
                   >
-                    <SelectTrigger>
+                    <SelectTrigger aria-label="Filter by open club">
                       <SelectValue placeholder="Open Club (code)" />
                     </SelectTrigger>
                     <SelectContent>
@@ -504,7 +508,7 @@ const Players: React.FC = () => {
                     value={closeClubFilterExact}
                     onValueChange={setCloseClubFilterExact}
                   >
-                    <SelectTrigger>
+                    <SelectTrigger aria-label="Filter by close club">
                       <SelectValue placeholder="Close Club (code)" />
                     </SelectTrigger>
                     <SelectContent>

@@ -122,12 +122,18 @@ export type Post = {
   user: User;
 };
 
+// Fields sent when creating / updating a post
+export type PostInput = Partial<Omit<Post, "createdAt" | "user">> & {
+  createdAt?: string | Date;
+};
+
 export type DefaultDetails = {
   id: number;
   herotitle: string;
   herosubtitle?: string | null;
   imageName?: string | null;
-  openclubchangeperiodMonths: string;
-  userId: string;
+  openclubchangeperiodMonths: string | number;
+  userId: string | number;
+  updatedAt?: string;
 };
 

@@ -5,11 +5,15 @@ const API_BASE_URL = import.meta.env.VITE_API_URL;
 
 export const playerDetails = async (userId: number): Promise<User> => {
   try {
+    // Send the login token when there is one: the API returns the full
+    // record only to the player themselves or an admin (public otherwise)
+    const token = sessionStorage.getItem("authToken");
     const response = await fetch(`${API_BASE_URL}/auth/${userId}`, {
       method: "GET",
       headers: {
         "ngrok-skip-browser-warning": "true",  // Skip ngrok browser warning
         "Content-Type": "application/json",
+        ...(token ? { Authorization: `Bearer ${token}` } : {}),
       },
     });
 

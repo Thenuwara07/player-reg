@@ -1,9 +1,9 @@
 import { idrestgenerator } from "@/lib/idGenerator";
-import { DefaultDetails, Post, SignUpResponse } from "../types/authTypes";
+import { DefaultDetails, Post, PostInput, SignUpResponse } from "../types/authTypes";
 
 const API_BASE_URL = import.meta.env.VITE_API_URL;
 
-export const createPost = async (postData: Post): Promise<SignUpResponse> => {
+export const createPost = async (postData: PostInput): Promise<SignUpResponse> => {
   try {
     // Prepare the payload without changing variable names
     const payload = {
@@ -75,7 +75,7 @@ export const GetPosts = async (): Promise<Post[]> => {
   }
 };
 
-export const updatePost = async (postData: Post): Promise<SignUpResponse> => {
+export const updatePost = async (postData: PostInput): Promise<SignUpResponse> => {
   try {
     // Prepare the payload without changing variable names
     const id = postData.id;
