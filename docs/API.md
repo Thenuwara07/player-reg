@@ -25,6 +25,8 @@ Status codes: `400` invalid input, `401` no token / wrong credentials, `403` wro
 | POST | `/clubchange` | 🏃 | Request a club change. Body `{ userId, type: "open"\|"close", newAssId, newAssCode, newAss, newClubId?, newClubCode?, newClub?, newImage, current*…, resignDate? }`. Always for the logged-in player |
 | PUT | `/updateuserandplayer` | 🏃 | Edit own details. Body `{ firstName?, lastName?, contact?, email?, height?, weight? }`. Edits only the logged-in player; empty strings leave a field unchanged |
 | GET | `/defaultdetails` | 🌐 | Site settings (hero title/subtitle/image, club-change period) |
+| POST | `/payhere/checkout` | 🏃 | Start an online registration payment. No body needed: the server creates an order for the **fixed Rs. 1,000.00 (LKR)**, signs it, and returns `{ action, fields }` to post to PayHere. Refused if the account isn't verified, registration is still active, or a slip payment is pending |
+| GET | `/payhere/status/:orderId` | 🏃 | Status of the player's own order: `initiated`, `approved`, `failed`, `cancelled`, `chargedback`, `abandoned`; includes the new expiry when approved |
 
 ## Admin — `/api/admin`
 
@@ -63,6 +65,12 @@ Status codes: `400` invalid input, `401` no token / wrong credentials, `403` wro
 | POST | `/post` | 🛡️ | Create `{ title, content, imageName, userId, subtitle?, createdAt? }` |
 | PATCH | `/post/:id` | 🛡️ | Partial update (author cannot change) |
 | DELETE | `/post/:id` | 🛡️ | Delete |
+
+## PayHere — `/api/payhere`
+
+| Method | Path | Access | Description |
+|---|---|---|---|
+| POST | `/notify` | PayHere only | Server-to-server notification (form-encoded). Verified with `md5sig` (merchant secret); the amount and currency must match the order. `status_code` `2` → payment **approved** and registration set for one year; `-1` cancelled, `-2` failed, `-3` charged back. Repeated notifications are ignored |
 
 ## Uploads — `/api/upload`
 

@@ -22,6 +22,7 @@ import PostCreateEdit from "@/pages/PostCreateEdit";
 import PublicRoute from "@/routes/PublicRoute";
 import Settings  from "@/pages/Settings";
 import Logs from "@/pages/Logs";
+import PaymentResult from "@/pages/PaymentResult";
 
 const queryClient = new QueryClient();
 
@@ -107,6 +108,9 @@ const AppContent = () => {
           <Route path="/signup" element={<SignUp />} /> */}
           <Route path="/players" element={<Players />} />
           <Route path="/dashboard" element={<RequireLogin><UserDashboard /></RequireLogin>} />
+          {/* PayHere sends the player back here after paying / cancelling */}
+          <Route path="/payment/return" element={<RequireLogin><PaymentResult /></RequireLogin>} />
+          <Route path="/payment/cancel" element={<RequireLogin><PaymentResult cancelled /></RequireLogin>} />
           <Route path="/player" element={<Guestplayer />} />
           <Route path="/" element={<Navigate to="/allPosts" replace />} />
           

@@ -15,10 +15,12 @@
 Use your **email** or **NIC number** and password. After 10 failed attempts in 15 minutes, sign-in is blocked for a while.
 
 ### 3. Register (pay the registration fee)
-1. On your profile, after your account is **Verified**, click **Register Account**.
-2. Enter the bank **Reference Number** and upload the payment slip (photo or PDF).
-3. Click **Submit**. Once an admin approves it, your profile shows **Registered**, your **Registration Number** (SLBF ID) and the **Expiry Date** (one year later).
-4. To renew, use **Register Account** again under *Extend your registration in SLBF* and submit the new payment slip.
+1. On your profile, after your account is **Verified**, click **Pay Rs. 1,000**.
+2. You are taken to the secure **PayHere** payment page. Pay by card or another PayHere method. The amount is fixed at Rs. 1,000.00.
+3. You come back to the app and see **Payment successful**. Your registration is active **immediately** for one year; no admin approval is needed.
+4. When your registration expires, the profile shows **Registration Expired** and the **Pay Rs. 1,000** button again to renew.
+
+If you cancel on the PayHere page, nothing is charged and you can pay again later. If the confirmation takes a moment, wait on the result page; please don't pay twice.
 
 ### 4. Join or change club
 In **Club Information**:
@@ -37,7 +39,7 @@ Sign in with an admin account; you land on the **Admin Dashboard**. The cards op
 | Card | What you do |
 |---|---|
 | **Pending Players' Verifications** | Click **View** on a player, check the ID images (click to enlarge; PDFs show page 1 with an **Open PDF** link), then **Approve** (assigns the SLBF ID) or **Reject** → **Yes, Reject** |
-| **New & Renew Player Registration Requests** | **View** the payment slip and reference number → **Approve** sets the registration for one year from today |
+| **New & Renew Player Registration Requests** | Older bank-slip payments only: **View** the slip and reference number → **Approve** sets the registration for one year. Online PayHere payments are approved automatically and appear in the **Logs** ("Paid registration fee online…") |
 | **Club Change Requests** | **View** the letters and requested club → **Approve** updates the player's club and SLBF ID |
 | **All players** | Searchable list of every player with clubs and registration dates (also **/allPlayers**) |
 | **Admin accounts** | Create another admin (date of birth and gender required, NIC optional), then **Create Admin Account** → **Confirm & Create** |

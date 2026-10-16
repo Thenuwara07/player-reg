@@ -9,6 +9,7 @@ import adminRoutes from "./routes/adminRoutes";
 import uploadRoutes from "./routes/uploadRoutes";
 import userRoutes from "./routes/userRoutes";
 import postRoutes from "./routes/postRoutes";
+import paymentRoutes from "./routes/paymentRoutes";
 
 dotenv.config();
 
@@ -25,8 +26,10 @@ app.use(compression());
 const allowedOrigins = [
   "http://localhost:5173",
   "http://localhost:8080",
+  "https://slbfregistration.net",
   "https://player-reg.vercel.app",
   "https://playerregistration-five.vercel.app",
+  "https://www.slbfregistration.net",
   // Extra origins without a code change: CORS_ORIGINS="https://a.com,https://b.com"
   ...(process.env.CORS_ORIGINS ?? "")
     .split(",")
@@ -71,6 +74,7 @@ app.use("/api/auth", authRoutes);
 app.use("/api/admin", adminRoutes);
 app.use("/api/admin", postRoutes);
 app.use("/api/user", userRoutes);
+app.use("/api/payhere", paymentRoutes);
 
 // ✅ Health check
 app.get("/", (req, res) => {

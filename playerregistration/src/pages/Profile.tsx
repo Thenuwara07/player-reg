@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from "react";
 import { Loader2 } from "lucide-react";
 import { useSubmitLock } from "@/hooks/useSubmitLock";
+import { startPayHereCheckout } from "@/api/paymentApi";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -588,6 +589,23 @@ const Profile = () => {
     }
   };
 
+  // Registration fee is paid online via PayHere (fixed Rs. 1,000). The
+  // backend creates and signs the order; this navigates to PayHere.
+  const payWithPayHere = submitLock.guard(async () => {
+    try {
+      await startPayHereCheckout();
+      // Keep the button disabled while the browser leaves for PayHere
+      // (released after 10 s in case the player comes back with "Back")
+      await new Promise((resolve) => setTimeout(resolve, 10000));
+    } catch (error) {
+      toast.error(
+        error instanceof Error && error.message
+          ? error.message
+          : "Could not start the payment. Please try again."
+      );
+    }
+  });
+
   const handleRegSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
 
@@ -767,7 +785,7 @@ const Profile = () => {
                       Your personal details and registration info
                     </CardDescription>
                   </div>
-                  <div className="flex gap-2">
+                  {/* <div className="flex gap-2">
                     {isEditing && (
                       <Button
                         variant="outline"
@@ -789,7 +807,7 @@ const Profile = () => {
                     >
                       {isEditing ? "Save Changes" : "Edit Profile"}
                     </Button>
-                  </div>
+                  </div> */}
                 </div>
               </CardHeader>
               <CardContent>
@@ -869,125 +887,20 @@ const Profile = () => {
                                   ⚫ Not Registered
                                 </Badge>
 
-                                <Dialog
-                                  open={regopen}
-                                  onOpenChange={setRegopen}
+                                {/* Online payment (PayHere): fixed Rs. 1,000 registration fee */}
+                                <Button
+                                  onClick={payWithPayHere}
+                                  disabled={submitLock.pending}
                                 >
-                                  <DialogTrigger asChild>
-                                    <Button
-                                      variant="outline"
-                                      onClick={() => setRegopen(true)}
-                                    >
-                                      Register Account
-                                    </Button>
-                                  </DialogTrigger>
-
-                                  <DialogContent>
-                                    <DialogHeader>
-                                      <DialogTitle>
-                                        Register your account in SLBF
-                                      </DialogTitle>
-                                      <DialogDescription>
-                                        Add the payment details
-                                      </DialogDescription>
-                                    </DialogHeader>
-
-                                    <form
-                                      onSubmit={submitLock.guard(handleRegSubmit)}
-                                      className="space-y-6"
-                                    >
-                                      <div className="space-y-4">
-                                        <div className="space-y-2">
-                                          <Label>
-                                            Enter the Reference Number
-                                          </Label>
-                                          <Input
-                                            id="referenceNo"
-                                            placeholder="Reference Number"
-                                            value={paymentData.reffernceNo}
-                                            onChange={(e) =>
-                                              handleInputChange(
-                                                "reffernceNo",
-                                                e.target.value
-                                              )
-                                            }
-                                            required
-                                          />
-                                        </div>
-
-                                        <div className="space-y-4">
-                                          <Label>Upload the slip</Label>
-                                          <div className="items-center gap-4">
-                                            <div className="relative">
-                                              {previews.slip ? (
-                                                <img
-                                                  src={previews.slip}
-                                                  alt="Slip preview"
-                                                  className="w-60 h-90 rounded-lg object-cover border-2 border-gray-300 mb-10"
-                                                />
-                                              ) : (
-                                                <div className="w-60 h-[200px] rounded-lg bg-gray-200 flex items-center justify-center mb-10">
-                                                  <span className="text-gray-500">
-                                                    No image
-                                                  </span>
-                                                </div>
-                                              )}
-                                            </div>
-
-                                            <div className="flex-1">
-                                              <input
-                                                type="file"
-                                                ref={slipFileRef}
-                                                onChange={(e) =>
-                                                  handleFileChange("slip", e)
-                                                }
-                                                accept={DOCUMENT_ACCEPT}
-                                                className="hidden"
-                                                id="slipImage"
-                                              />
-                                              <Label
-                                                htmlFor="slipImage"
-                                                className="cursor-pointer"
-                                              >
-                                                <Button
-                                                  type="button"
-                                                  variant="outline"
-                                                  onClick={() =>
-                                                    slipFileRef.current?.click()
-                                                  }
-                                                >
-                                                  {previews.slip
-                                                    ? "Change Image"
-                                                    : "Upload Image"}
-                                                </Button>
-                                              </Label>
-                                              <p className="text-xs text-gray-500 mt-1">
-                                                Recommended size: 200x200
-                                                pixels, Max 2MB
-                                              </p>
-                                            </div>
-                                          </div>
-                                        </div>
-
-                                        {/* Submit uses the form handler */}
-                                        <Button
-                                          type="submit"
-                                          className="w-full"
-                                          disabled={submitLock.pending}
-                                        >
-                                          {submitLock.pending ? (
-                                            <>
-                                              <Loader2 className="mr-2 h-4 w-4 animate-spin" />
-                                              Submitting...
-                                            </>
-                                          ) : (
-                                            "Submit"
-                                          )}
-                                        </Button>
-                                      </div>
-                                    </form>
-                                  </DialogContent>
-                                </Dialog>
+                                  {submitLock.pending ? (
+                                    <>
+                                      <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                                      Redirecting to PayHere...
+                                    </>
+                                  ) : (
+                                    "Pay Rs. 1,000"
+                                  )}
+                                </Button>
                               </>
                             );
                           }
@@ -1015,125 +928,20 @@ const Profile = () => {
                                   🔴 Registration Expired
                                 </Badge>
 
-                                <Dialog
-                                  open={regopen}
-                                  onOpenChange={setRegopen}
+                                {/* Online payment (PayHere): fixed Rs. 1,000 registration fee */}
+                                <Button
+                                  onClick={payWithPayHere}
+                                  disabled={submitLock.pending}
                                 >
-                                  <DialogTrigger asChild>
-                                    <Button
-                                      variant="outline"
-                                      onClick={() => setRegopen(true)}
-                                    >
-                                      Register Account
-                                    </Button>
-                                  </DialogTrigger>
-
-                                  <DialogContent>
-                                    <DialogHeader>
-                                      <DialogTitle>
-                                        Extend your registration in SLBF
-                                      </DialogTitle>
-                                      <DialogDescription>
-                                        Add the payment details
-                                      </DialogDescription>
-                                    </DialogHeader>
-
-                                    <form
-                                      onSubmit={submitLock.guard(handleRegSubmit)}
-                                      className="space-y-6"
-                                    >
-                                      <div className="space-y-4">
-                                        <div className="space-y-2">
-                                          <Label>
-                                            Enter the Reference Number
-                                          </Label>
-                                          <Input
-                                            id="referenceNo"
-                                            placeholder="Reference Number"
-                                            value={paymentData.reffernceNo}
-                                            onChange={(e) =>
-                                              handleInputChange(
-                                                "reffernceNo",
-                                                e.target.value
-                                              )
-                                            }
-                                            required
-                                          />
-                                        </div>
-
-                                        <div className="space-y-4">
-                                          <Label>Upload the slip</Label>
-                                          <div className="items-center gap-4">
-                                            <div className="relative">
-                                              {previews.slip ? (
-                                                <img
-                                                  src={previews.slip}
-                                                  alt="Slip preview"
-                                                  className="w-60 h-90 rounded-lg object-cover border-2 border-gray-300 mb-10"
-                                                />
-                                              ) : (
-                                                <div className="w-60 h-[200px] rounded-lg bg-gray-200 flex items-center justify-center mb-10">
-                                                  <span className="text-gray-500">
-                                                    No image
-                                                  </span>
-                                                </div>
-                                              )}
-                                            </div>
-
-                                            <div className="flex-1">
-                                              <input
-                                                type="file"
-                                                ref={slipFileRef}
-                                                onChange={(e) =>
-                                                  handleFileChange("slip", e)
-                                                }
-                                                accept={DOCUMENT_ACCEPT}
-                                                className="hidden"
-                                                id="slipImage"
-                                              />
-                                              <Label
-                                                htmlFor="slipImage"
-                                                className="cursor-pointer"
-                                              >
-                                                <Button
-                                                  type="button"
-                                                  variant="outline"
-                                                  onClick={() =>
-                                                    slipFileRef.current?.click()
-                                                  }
-                                                >
-                                                  {previews.slip
-                                                    ? "Change Image"
-                                                    : "Upload Image"}
-                                                </Button>
-                                              </Label>
-                                              <p className="text-xs text-gray-500 mt-1">
-                                                Recommended size: 200x200
-                                                pixels, Max 2MB
-                                              </p>
-                                            </div>
-                                          </div>
-                                        </div>
-
-                                        {/* Submit uses the form handler */}
-                                        <Button
-                                          type="submit"
-                                          className="w-full"
-                                          disabled={submitLock.pending}
-                                        >
-                                          {submitLock.pending ? (
-                                            <>
-                                              <Loader2 className="mr-2 h-4 w-4 animate-spin" />
-                                              Submitting...
-                                            </>
-                                          ) : (
-                                            "Submit"
-                                          )}
-                                        </Button>
-                                      </div>
-                                    </form>
-                                  </DialogContent>
-                                </Dialog>
+                                  {submitLock.pending ? (
+                                    <>
+                                      <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                                      Redirecting to PayHere...
+                                    </>
+                                  ) : (
+                                    "Pay Rs. 1,000"
+                                  )}
+                                </Button>
                               </>
                             );
                           }

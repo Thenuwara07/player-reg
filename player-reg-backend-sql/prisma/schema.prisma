@@ -61,9 +61,18 @@ model Payment {
   id          Int       @id @default(autoincrement())
   userId      Int
   user        User      @relation(fields: [userId], references: [id])
-  slipImage   String
+  // Bank slip URL (manual payments only; empty for online payments)
+  slipImage   String?
   referenceNo String    @default("N/A")
+  // pending | approved | rejected (manual slips)
+  // initiated | approved | failed | cancelled | abandoned (PayHere)
   status      String    @default("pending")
+  method      String    @default("slip") // slip | payhere
+  amount      Decimal?  @db.Decimal(10, 2)
+  currency    String?
+  // Our order id sent to PayHere, and PayHere's own payment id
+  orderId          String? @unique
+  gatewayPaymentId String?
   createdAt   DateTime  @default(now())
   updatedAt   DateTime? @updatedAt
 }

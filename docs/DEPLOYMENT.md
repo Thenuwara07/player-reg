@@ -90,6 +90,26 @@ The backend only accepts browser requests from the origins listed in `player-reg
 
 Create an account, copy the cloud name / API key / secret into the backend environment. Uploaded files go to `CLOUDINARY_FOLDER`. PDF previews use Cloudinary's PDF→JPG conversion; the "Open PDF" link needs **Settings → Security → Allow delivery of PDF and ZIP files** enabled.
 
+## 6. PayHere (online registration payment)
+
+Verified players pay the fixed **Rs. 1,000.00** registration fee on PayHere. The backend creates and signs each order; PayHere then calls the backend's **notify URL**, which verifies the signature and amount before approving the payment and activating the registration for one year.
+
+1. **Sandbox account:** sign up at https://sandbox.payhere.lk. Under **Settings → Domains & Credentials** add your frontend domain (e.g. `player-reg.vercel.app`; add `localhost` too for local testing). Copy the **Merchant ID** and the **Merchant Secret** generated for that domain; the secret is specific to the domain.
+2. **Render → Environment:**
+   ```
+   PAYHERE_MERCHANT_ID=<merchant id>
+   PAYHERE_MERCHANT_SECRET=<merchant secret>
+   PAYHERE_SANDBOX=true
+   BACKEND_PUBLIC_URL=https://player-reg.onrender.com
+   FRONTEND_URL=https://player-reg.vercel.app
+   ```
+   Until these are set, the Pay button shows "Online payment is not available right now".
+3. **Notify URL must be public.** PayHere calls `BACKEND_PUBLIC_URL/api/payhere/notify` from the internet, so it **cannot reach `localhost`**. On a local machine the redirect and return pages work, but payments stay *initiated* unless the backend is exposed (e.g. with an ngrok tunnel set as `BACKEND_PUBLIC_URL`).
+4. **Sandbox test cards:** use PayHere's sandbox test card numbers (from the PayHere sandbox documentation); no real money moves.
+5. **Going live:** create the live merchant account, add the production domain, then set `PAYHERE_SANDBOX=false` and the **live** merchant ID and secret. Nothing else changes.
+
+> If a free Render server is asleep, the first notify can arrive while it wakes up. PayHere retries notifications, and the return page waits up to 90 seconds before showing "Payment is being confirmed".
+
 ## Release checklist
 
 1. Merge into `main` (Render and Vercel deploy from `main`).

@@ -13,6 +13,7 @@ Web platform for registering players, approving registrations and payments, mana
 ## Features
 
 - **Players:** sign up (with ID documents), sign in with email or NIC, view profile and registration status, submit the registration payment slip, request open/close club changes, edit contact details.
+- **Online payment:** verified players pay the Rs. 1,000 registration fee through **PayHere**; the payment is approved automatically and registration is set for one year.
 - **Admins:** approve or reject players, payments and club changes; SLBF ID assignment; registration period (1 year); manage posts; edit home page settings; create admin accounts; view all players; activity logs.
 - **Uploads:** PNG, JPEG and PDF only. Images are compressed in the browser to under 2 MB before upload; PDFs must be under 2 MB.
 - **Activity logs:** every important action (logins, sign-ups, approvals, posts, settings…) is recorded; logs older than 1 month are deleted automatically.
@@ -75,6 +76,10 @@ Create the first admin account with the snippet in [docs/DEPLOYMENT.md](docs/DEP
 | `CLOUDINARY_FOLDER` | no | Default `player-reg/uploads` |
 | `PORT` | no | Default `5000`; Render sets it automatically |
 | `CORS_ORIGINS` | no | Extra allowed frontend URLs, comma-separated |
+| `PAYHERE_MERCHANT_ID` / `PAYHERE_MERCHANT_SECRET` | for online payment | From PayHere → Settings → Domains & Credentials (the secret is per domain) |
+| `PAYHERE_SANDBOX` | no | `true` (default) uses sandbox.payhere.lk; set `false` for live payments |
+| `BACKEND_PUBLIC_URL` | for online payment | Public API base, e.g. `https://player-reg.onrender.com` — PayHere calls `<this>/api/payhere/notify` |
+| `FRONTEND_URL` | for online payment | e.g. `https://player-reg.vercel.app` — players return to `/payment/return` |
 
 **Frontend** (`playerregistration/.env`, and Vercel → Settings → Environment Variables):
 
